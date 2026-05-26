@@ -1,0 +1,458 @@
+[
+  {
+    "title": "Data Analyst",
+    "jobDescription": "Analyze large datasets, create reports, use SQL and Python for data analysis, build dashboards using Power BI or Tableau, interpret business data to support decision making",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "SQL", "stars": 5 },
+      { "skill": "Python", "stars": 4 },
+      { "skill": "Data Visualization", "stars": 4 },
+      { "skill": "Statistics", "stars": 3 },
+      { "skill": "Excel", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Business Intelligence Analyst",
+    "jobDescription": "Design and maintain BI dashboards, write complex SQL queries, work with data warehouses, use Power BI or Tableau, translate business requirements into analytical solutions",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Power BI / Tableau", "stars": 5 },
+      { "skill": "SQL", "stars": 5 },
+      { "skill": "Data Warehousing", "stars": 4 },
+      { "skill": "ETL", "stars": 3 },
+      { "skill": "Business Acumen", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Data Scientist",
+    "jobDescription": "Build machine learning models, perform statistical analysis, work with large datasets using Python and R, communicate insights to stakeholders, deploy models to production",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Machine Learning", "stars": 5 },
+      { "skill": "Python / R", "stars": 5 },
+      { "skill": "Statistics", "stars": 4 },
+      { "skill": "Data Wrangling", "stars": 4 },
+      { "skill": "Communication", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Data Engineer",
+    "jobDescription": "Build and maintain data pipelines, work with big data tools like Spark and Kafka, design data warehouses, ensure data quality and reliability, work with cloud platforms AWS or GCP",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "SQL", "stars": 5 },
+      { "skill": "Python", "stars": 5 },
+      { "skill": "Data Pipelines", "stars": 5 },
+      { "skill": "Cloud Platforms", "stars": 4 },
+      { "skill": "Big Data Tools", "stars": 4 }
+    ]
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "jobDescription": "Design and deploy ML models, optimize model performance, work with deep learning frameworks like TensorFlow and PyTorch, build MLOps pipelines, collaborate with data scientists",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Machine Learning", "stars": 5 },
+      { "skill": "Deep Learning", "stars": 5 },
+      { "skill": "Python", "stars": 5 },
+      { "skill": "MLOps", "stars": 4 },
+      { "skill": "Software Engineering", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Data Visualization Specialist",
+    "jobDescription": "Create compelling data visualizations, design interactive dashboards, work with Tableau, Power BI and D3.js, translate complex data into clear visual stories for business stakeholders",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Tableau / Power BI", "stars": 5 },
+      { "skill": "Data Storytelling", "stars": 5 },
+      { "skill": "SQL", "stars": 4 },
+      { "skill": "Design Principles", "stars": 4 },
+      { "skill": "Python / R", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Business Analyst",
+    "jobDescription": "Gather and document business requirements, analyze processes, create user stories, work with stakeholders, support project delivery, produce reports and recommendations",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Requirements Gathering", "stars": 5 },
+      { "skill": "Process Analysis", "stars": 5 },
+      { "skill": "Communication", "stars": 4 },
+      { "skill": "SQL", "stars": 3 },
+      { "skill": "Project Management", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Product Manager",
+    "jobDescription": "Define product vision and strategy, manage product roadmap, work with engineering and design teams, prioritize features, analyze market trends, drive product growth",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Product Strategy", "stars": 5 },
+      { "skill": "Stakeholder Management", "stars": 5 },
+      { "skill": "Agile / Scrum", "stars": 4 },
+      { "skill": "Data Analysis", "stars": 4 },
+      { "skill": "User Research", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Product Owner",
+    "jobDescription": "Manage and prioritize product backlog, write user stories and acceptance criteria, work in agile teams, communicate product vision to developers, ensure delivered features meet business needs",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Backlog Management", "stars": 5 },
+      { "skill": "Agile / Scrum", "stars": 5 },
+      { "skill": "User Stories", "stars": 5 },
+      { "skill": "Stakeholder Communication", "stars": 4 },
+      { "skill": "Product Vision", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Project Manager",
+    "jobDescription": "Plan and execute projects, manage timelines and budgets, coordinate teams, identify and mitigate risks, use project management tools like Jira and MS Project, ensure delivery on time",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Project Planning", "stars": 5 },
+      { "skill": "Risk Management", "stars": 5 },
+      { "skill": "Agile / PMP", "stars": 4 },
+      { "skill": "Budgeting", "stars": 4 },
+      { "skill": "Team Leadership", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Operations Analyst",
+    "jobDescription": "Analyze operational processes, identify inefficiencies, create reports and dashboards, use Excel and SQL, support management with data-driven insights to improve operations",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Process Improvement", "stars": 5 },
+      { "skill": "Data Analysis", "stars": 5 },
+      { "skill": "Excel", "stars": 4 },
+      { "skill": "SQL", "stars": 3 },
+      { "skill": "Reporting", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Strategy Analyst",
+    "jobDescription": "Support strategic planning, conduct market and competitive analysis, build financial models, present recommendations to senior leadership, work cross-functionally",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Strategic Thinking", "stars": 5 },
+      { "skill": "Financial Modeling", "stars": 5 },
+      { "skill": "Market Analysis", "stars": 4 },
+      { "skill": "Data Analysis", "stars": 4 },
+      { "skill": "Presentation Skills", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Financial Analyst",
+    "jobDescription": "Analyze financial data, build financial models, prepare forecasts and budgets, support investment decisions, create financial reports, work with Excel and financial systems",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Financial Modeling", "stars": 5 },
+      { "skill": "Excel", "stars": 5 },
+      { "skill": "Financial Reporting", "stars": 4 },
+      { "skill": "Budgeting & Forecasting", "stars": 4 },
+      { "skill": "Accounting Principles", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Investment Analyst",
+    "jobDescription": "Research and evaluate investment opportunities, analyze financial statements, build valuation models, monitor market trends, prepare investment reports and recommendations",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Valuation", "stars": 5 },
+      { "skill": "Financial Analysis", "stars": 5 },
+      { "skill": "Market Research", "stars": 4 },
+      { "skill": "Financial Modeling", "stars": 4 },
+      { "skill": "Risk Assessment", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Risk Analyst",
+    "jobDescription": "Identify and assess financial and operational risks, develop risk models, monitor risk exposure, ensure regulatory compliance, prepare risk reports for management",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Risk Assessment", "stars": 5 },
+      { "skill": "Financial Analysis", "stars": 5 },
+      { "skill": "Regulatory Compliance", "stars": 4 },
+      { "skill": "Quantitative Methods", "stars": 4 },
+      { "skill": "Reporting", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Credit Analyst",
+    "jobDescription": "Assess creditworthiness of individuals and businesses, analyze financial statements, prepare credit reports, recommend credit limits, monitor existing credit portfolios",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Credit Assessment", "stars": 5 },
+      { "skill": "Financial Statement Analysis", "stars": 5 },
+      { "skill": "Risk Analysis", "stars": 4 },
+      { "skill": "Banking Knowledge", "stars": 4 },
+      { "skill": "Reporting", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Corporate Finance Analyst",
+    "jobDescription": "Support M&A transactions, manage capital structure, perform DCF and valuation analysis, prepare board presentations, work on fundraising and investor relations",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Valuation & DCF", "stars": 5 },
+      { "skill": "M&A Analysis", "stars": 5 },
+      { "skill": "Financial Modeling", "stars": 5 },
+      { "skill": "Capital Markets", "stars": 4 },
+      { "skill": "Presentation Skills", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Treasury Analyst",
+    "jobDescription": "Manage cash flow and liquidity, execute FX and interest rate hedging, monitor banking relationships, prepare daily cash position reports, support treasury operations",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Cash Management", "stars": 5 },
+      { "skill": "FX & Hedging", "stars": 5 },
+      { "skill": "Financial Analysis", "stars": 4 },
+      { "skill": "Banking Operations", "stars": 4 },
+      { "skill": "Excel", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Accountant",
+    "jobDescription": "Maintain financial records, prepare journal entries, reconcile accounts, assist in month-end closing, prepare financial statements, ensure compliance with accounting standards",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Accounting Principles", "stars": 5 },
+      { "skill": "Financial Reporting", "stars": 5 },
+      { "skill": "Excel", "stars": 4 },
+      { "skill": "Reconciliation", "stars": 4 },
+      { "skill": "ERP Systems", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Financial Accountant",
+    "jobDescription": "Prepare statutory financial statements, manage general ledger, handle month-end and year-end closing, ensure IFRS or GAAP compliance, liaise with external auditors",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "IFRS / GAAP", "stars": 5 },
+      { "skill": "Financial Statements", "stars": 5 },
+      { "skill": "General Ledger", "stars": 4 },
+      { "skill": "Month-End Closing", "stars": 4 },
+      { "skill": "Audit Support", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Management Accountant",
+    "jobDescription": "Prepare management accounts, support budgeting and forecasting, analyze variances, provide financial insights to business managers, support strategic decision making",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Management Reporting", "stars": 5 },
+      { "skill": "Budgeting & Forecasting", "stars": 5 },
+      { "skill": "Variance Analysis", "stars": 4 },
+      { "skill": "Cost Accounting", "stars": 4 },
+      { "skill": "Excel", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Auditor",
+    "jobDescription": "Plan and execute audit engagements, assess internal controls, identify risks and compliance issues, prepare audit reports, work with clients to resolve findings",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Audit Methodology", "stars": 5 },
+      { "skill": "Internal Controls", "stars": 5 },
+      { "skill": "Risk Assessment", "stars": 4 },
+      { "skill": "Financial Reporting", "stars": 4 },
+      { "skill": "Communication", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Cost Accountant",
+    "jobDescription": "Track and analyze production costs, prepare cost reports, support pricing decisions, perform variance analysis, maintain standard costing systems, support budgeting",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Cost Accounting", "stars": 5 },
+      { "skill": "Variance Analysis", "stars": 5 },
+      { "skill": "Standard Costing", "stars": 4 },
+      { "skill": "Budgeting", "stars": 4 },
+      { "skill": "Excel", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Software Developer",
+    "jobDescription": "Design and develop software applications, write clean and maintainable code, participate in code reviews, work in agile teams, debug and fix issues, collaborate with QA and product teams",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Programming", "stars": 5 },
+      { "skill": "Data Structures & Algorithms", "stars": 5 },
+      { "skill": "Software Design", "stars": 4 },
+      { "skill": "Version Control", "stars": 4 },
+      { "skill": "Agile", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Web Developer",
+    "jobDescription": "Build and maintain websites, work with HTML, CSS and JavaScript, integrate backend APIs, ensure cross-browser compatibility, optimize web performance, collaborate with designers",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "HTML & CSS", "stars": 5 },
+      { "skill": "JavaScript", "stars": 5 },
+      { "skill": "Responsive Design", "stars": 4 },
+      { "skill": "API Integration", "stars": 4 },
+      { "skill": "Performance Optimization", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Backend Developer",
+    "jobDescription": "Build server-side applications and APIs, work with databases, ensure security and scalability, write clean code in Node.js, Python or Java, work with cloud services",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Backend Programming", "stars": 5 },
+      { "skill": "REST APIs", "stars": 5 },
+      { "skill": "Databases", "stars": 5 },
+      { "skill": "Security", "stars": 4 },
+      { "skill": "Cloud Services", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Frontend Developer",
+    "jobDescription": "Build responsive and accessible user interfaces, work with React or Vue, handle state management, integrate REST APIs, write unit tests, optimize for performance",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "React / Vue", "stars": 5 },
+      { "skill": "JavaScript", "stars": 5 },
+      { "skill": "CSS", "stars": 4 },
+      { "skill": "TypeScript", "stars": 4 },
+      { "skill": "Testing", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Full Stack Developer",
+    "jobDescription": "Develop both frontend and backend of web applications, work with React and Node.js, design databases, build and consume APIs, deploy applications to cloud",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Frontend Development", "stars": 5 },
+      { "skill": "Backend Development", "stars": 5 },
+      { "skill": "Databases", "stars": 4 },
+      { "skill": "DevOps & Deployment", "stars": 3 },
+      { "skill": "System Design", "stars": 3 }
+    ]
+  },
+  {
+    "title": "QA Engineer",
+    "jobDescription": "Design and execute test plans, perform manual and automated testing, identify and report bugs, write test scripts using Selenium or Cypress, ensure software quality before release",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Test Planning", "stars": 5 },
+      { "skill": "Manual Testing", "stars": 5 },
+      { "skill": "Test Automation", "stars": 4 },
+      { "skill": "Bug Reporting", "stars": 4 },
+      { "skill": "Agile", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Systems Analyst",
+    "jobDescription": "Analyze existing systems, gather technical and business requirements, design system solutions, create documentation, liaise between business and IT teams, support implementation",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Systems Analysis", "stars": 5 },
+      { "skill": "Requirements Engineering", "stars": 5 },
+      { "skill": "Documentation", "stars": 4 },
+      { "skill": "SQL", "stars": 3 },
+      { "skill": "Business Communication", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Digital Transformation Specialist",
+    "jobDescription": "Lead digital transformation initiatives, assess current processes and identify automation opportunities, implement new technologies, manage change, work with ERP and cloud platforms",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Digital Strategy", "stars": 5 },
+      { "skill": "Change Management", "stars": 5 },
+      { "skill": "Process Improvement", "stars": 4 },
+      { "skill": "ERP / Cloud Platforms", "stars": 4 },
+      { "skill": "Stakeholder Management", "stars": 3 }
+    ]
+  },
+  {
+    "title": "IT Consultant",
+    "jobDescription": "Advise clients on IT strategy and solutions, assess technical needs, recommend and implement systems, manage client relationships, deliver IT projects on time and within budget",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "IT Strategy", "stars": 5 },
+      { "skill": "Client Management", "stars": 5 },
+      { "skill": "Systems Implementation", "stars": 4 },
+      { "skill": "Project Management", "stars": 4 },
+      { "skill": "Technical Knowledge", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Technology Analyst",
+    "jobDescription": "Evaluate and analyze technology trends, assess IT systems performance, support technology procurement, create technology reports, bridge gap between business and IT",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Technology Assessment", "stars": 5 },
+      { "skill": "Data Analysis", "stars": 4 },
+      { "skill": "Research & Reporting", "stars": 4 },
+      { "skill": "IT Knowledge", "stars": 4 },
+      { "skill": "Business Acumen", "stars": 3 }
+    ]
+  },
+  {
+    "title": "ERP Consultant",
+    "jobDescription": "Implement and configure ERP systems like SAP or Oracle, gather requirements, train end users, support go-live, troubleshoot issues, customize ERP modules to business needs",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "ERP Systems", "stars": 5 },
+      { "skill": "Business Process Knowledge", "stars": 5 },
+      { "skill": "Requirements Gathering", "stars": 4 },
+      { "skill": "Training & Support", "stars": 4 },
+      { "skill": "Project Management", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Digital Marketing Analyst",
+    "jobDescription": "Analyze digital marketing campaign performance, track KPIs, use Google Analytics and Meta Ads, prepare marketing reports, provide insights to optimize campaigns",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Digital Analytics", "stars": 5 },
+      { "skill": "Google Analytics", "stars": 5 },
+      { "skill": "Campaign Analysis", "stars": 4 },
+      { "skill": "Excel / Data Tools", "stars": 4 },
+      { "skill": "Marketing Knowledge", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Marketing Data Analyst",
+    "jobDescription": "Collect and analyze marketing data, build dashboards, perform customer segmentation, track marketing ROI, use SQL and Python for data analysis, support marketing strategy with insights",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Data Analysis", "stars": 5 },
+      { "skill": "SQL", "stars": 5 },
+      { "skill": "Marketing Analytics", "stars": 4 },
+      { "skill": "Customer Segmentation", "stars": 4 },
+      { "skill": "Dashboards", "stars": 3 }
+    ]
+  },
+  {
+    "title": "SEO Analyst",
+    "jobDescription": "Conduct keyword research, optimize website content for search engines, perform technical SEO audits, track rankings using SEMrush or Ahrefs, analyze competitor strategies",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "SEO Strategy", "stars": 5 },
+      { "skill": "Keyword Research", "stars": 5 },
+      { "skill": "Technical SEO", "stars": 4 },
+      { "skill": "SEO Tools", "stars": 4 },
+      { "skill": "Content Optimization", "stars": 3 }
+    ]
+  },
+  {
+    "title": "Performance Marketing Analyst",
+    "jobDescription": "Manage paid media campaigns on Google Ads and Meta, optimize ad performance, track ROAS and CPA, run A/B tests, analyze campaign data and prepare performance reports",
+    "numQuestions": 20,
+    "scorecard": [
+      { "skill": "Paid Media", "stars": 5 },
+      { "skill": "Google Ads / Meta Ads", "stars": 5 },
+      { "skill": "Campaign Optimization", "stars": 4 },
+      { "skill": "A/B Testing", "stars": 4 },
+      { "skill": "Analytics & Reporting", "stars": 3 }
+    ]
+  }
+]

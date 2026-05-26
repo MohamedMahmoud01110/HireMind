@@ -1,0 +1,111 @@
+{
+  "session_id": "session_nqfyo6",
+  "updated_at": "2026-05-08T15:34:15",
+  "questions": {
+    "q1": {
+      "question_index": 0,
+      "question_id": "Q1",
+      "question_text": "Walk me through your background briefly.",
+      "user_answer": "the the",
+      "analysis": {
+        "structure_score": 0.0,
+        "depth_score": 0.0,
+        "confidence_score": 0.0,
+        "relevance_score": 0.0,
+        "overall_score": 0.0,
+        "word_count": 0,
+        "star_signals": [],
+        "weak_language": [],
+        "coaching_flags": [
+          "answer_too_short"
+        ]
+      },
+      "deepface": {
+        "expected_age": 28,
+        "gender": "Man",
+        "emotion": "neutral",
+        "scores": {
+          "angry": 0.17,
+          "disgust": 0.0,
+          "fear": 0.62,
+          "happy": 3.65,
+          "sad": 1.25,
+          "surprise": 1.7,
+          "neutral": 92.62
+        }
+      },
+      "timestamp": "2026-05-08T15:34:03"
+    },
+    "q2": {
+      "question_index": 1,
+      "question_id": "Q2",
+      "question_text": "Why are you interested in this role?",
+      "user_answer": "the",
+      "analysis": {
+        "structure_score": 0.0,
+        "depth_score": 0.0,
+        "confidence_score": 0.0,
+        "relevance_score": 0.0,
+        "overall_score": 0.0,
+        "word_count": 0,
+        "star_signals": [],
+        "weak_language": [],
+        "coaching_flags": [
+          "answer_too_short"
+        ]
+      },
+      "deepface": {
+        "expected_age": 35,
+        "gender": "Man",
+        "emotion": "surprise",
+        "scores": {
+          "angry": 0.0,
+          "disgust": 0.0,
+          "fear": 42.18,
+          "happy": 0.15,
+          "sad": 0.12,
+          "surprise": 57.46,
+          "neutral": 0.09
+        }
+      },
+      "timestamp": "2026-05-08T15:34:07"
+    },
+    "q3": {
+      "question_index": 2,
+      "question_id": "Q3",
+      "question_text": "Describe a challenging situation and how you resolved it.",
+      "user_answer": "the the bigger the crap",
+      "analysis": {
+        "structure_score": 3.0,
+        "depth_score": 3.0,
+        "confidence_score": 8.0,
+        "relevance_score": 0.0,
+        "overall_score": 3.6,
+        "word_count": 5,
+        "star_signals": [],
+        "weak_language": [],
+        "coaching_flags": [
+          "low_structure",
+          "low_depth",
+          "off_topic",
+          "answer_too_short"
+        ]
+      },
+      "deepface": {
+        "expected_age": 32,
+        "gender": "Man",
+        "emotion": "surprise",
+        "scores": {
+          "angry": 0.0,
+          "disgust": 0.0,
+          "fear": 14.13,
+          "happy": 0.6,
+          "sad": 0.0,
+          "surprise": 85.26,
+          "neutral": 0.0
+        }
+      },
+      "timestamp": "2026-05-08T15:34:15"
+    }
+  }
+}
