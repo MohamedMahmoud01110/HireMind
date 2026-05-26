@@ -236,7 +236,7 @@ function PersonalInfoCard({ userData }) {
     jobRole: userData?.jobRole ?? "",
     bio: userData?.bio ?? "",
   });
-  console.log(form);
+  // console.log(form);
 
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -250,7 +250,7 @@ function PersonalInfoCard({ userData }) {
     try {
       setLoading(true);
       const res = await updateProfile(form);
-      console.log("user updates successfully ", res);
+      // console.log("user updates successfully ", res);
     } catch (error) {
       console.log(error);
     } finally {
@@ -356,7 +356,7 @@ function ChangePasswordCard() {
     try {
       setLoading(true);
       const res = await changePassword(fields);
-      console.log("password changed successfully ");
+      // console.log("password changed successfully ");
       setLoading(false);
       setSaved(true);
       setFields({ oldPassword: "", newPassword: "", confirmPassword: "" });
