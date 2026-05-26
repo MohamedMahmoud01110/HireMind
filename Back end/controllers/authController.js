@@ -9,7 +9,7 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     // const hashedPassword = await bcrypt.hash(password, salt);
     const hashedPassword = await bcrypt.hash(password, 10);
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: email.trim().toLowerCase() });
     if (user) return res.status(400).json({ message: "User already exists" });
     user = new User({ name, email, password: hashedPassword, role });
     await user.save();
@@ -34,9 +34,9 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    // console.log("BODY:", req.body);
-    const user = await User.findOne({ email });
-    // console.log("USER FOUND:", user);
+    console.log("BODY:", req.body);
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    console.log("USER FOUND:", user);
 
     if (!user) return res.status(400).json({ message: "User not found" });
     console.log("DB PASSWORD:", user.password);

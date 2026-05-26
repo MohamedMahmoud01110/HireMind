@@ -8,10 +8,12 @@ const {
   deleteUser,
   deleteUserById,
   changePassword,
+  deleteMe,
 } = require("../controllers/userController");
 
 router.get("/me", auth(), getProfile);
 router.put("/me", auth(), updateProfile);
+router.delete("/me", auth(), deleteMe);
 router.put("/me/change-password", auth(), changePassword);
 router.get("/", auth(["admin"]), getAllUsers);
 router.delete("/", auth(), deleteUser);

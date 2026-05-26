@@ -14,6 +14,14 @@ exports.updateProfile = async (req, res) => {
   }).select("-password");
   res.json(user);
 };
+
+//delete me
+exports.deleteMe = async (req, res) => {
+  await User.deleteOne(req.user.id);
+  res.json({
+    message: "User deleted successfully",
+  });
+};
 // change password
 exports.changePassword = async (req, res) => {
   try {

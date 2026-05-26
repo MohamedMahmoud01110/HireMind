@@ -11,10 +11,24 @@ exports.addQuestion = async (req, res) => {
   }
 };
 
-// Get Questions by Assessment
-exports.getQuestions = async (req, res) => {
+exports.getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find({ assessmentId: req.params.assessmentId });
+    const questions = await Question.find();
+    res.json({
+      total: questions.length,
+      questions,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get Questions by Assessment
+exports.getQuestionsByAssessmentId = async (req, res) => {
+  try {
+    const questions = await Question.find({
+      assessmentId: req.params.assessmentId,
+    });
     res.json(questions);
   } catch (err) {
     res.status(500).json({ error: err.message });
