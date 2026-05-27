@@ -44,14 +44,16 @@ export default function SignupPage({ setUserData, goNext }) {
       skills,
       cv: cvFile?.name || null,
     };
-    // localStorage.setItem('userData', JSON.stringify(user))
     // localStorage.setItem('token', res.data.token)
     try {
       setSubmitted(true);
+      // console.log(user);
       const res = await registerUser(user);
-      setUserData?.(res.data.user);
-      localStorage.setItem("token", res.data.token);
       // console.log(res);
+      // console.log(res.data.user);
+      setUserData?.(res.data.user);
+      localStorage.setItem("userData", JSON.stringify(res.data.user));
+      localStorage.setItem("token", res.data.token);
 
       goNext();
     } catch (err) {

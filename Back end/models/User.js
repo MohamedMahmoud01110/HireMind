@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema({
   role: String, // student / company
   jobRole: String,
   bio: String,
+  skills: [String],
+  cv: String,
 });
 
 module.exports = mongoose.model("User", userSchema);

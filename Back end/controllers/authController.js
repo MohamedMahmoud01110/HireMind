@@ -4,14 +4,23 @@ const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, jobRole, bio } = req.body;
+    const { name, email, password, role, jobRole, bio, cv, skills } = req.body;
 
     const salt = await bcrypt.genSalt(10);
     // const hashedPassword = await bcrypt.hash(password, salt);
     const hashedPassword = await bcrypt.hash(password, 10);
     let user = await User.findOne({ email: email.trim().toLowerCase() });
     if (user) return res.status(400).json({ message: "User already exists" });
-    user = new User({ name, email, password: hashedPassword, role });
+    user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      jobRole,
+      bio,
+      cv,
+      skills,
+    });
     await user.save();
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -28,6 +37,7 @@ exports.register = async (req, res) => {
           role: user.role,
           jobRole: user.jobRole,
           bio: user.bio,
+          skills,
         },
       },
     });
@@ -65,6 +75,8 @@ exports.login = async (req, res) => {
           role: user.role,
           jobRole: user.jobRole,
           bio: user.bio,
+          skills: user.skills,
+          cv: user.cv,
         },
       },
     });
