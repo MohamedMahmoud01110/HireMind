@@ -15,6 +15,15 @@ exports.updateProfile = async (req, res) => {
   res.json(user);
 };
 
+// get my job role
+exports.getJobRole = async (req, res) => {
+  const user = await User.findById(req.user.id).select("jobRole");
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  res.json({ jobRole: user.jobRole });
+};
+
 //delete me
 exports.deleteMe = async (req, res) => {
   await User.deleteOne(req.user.id);

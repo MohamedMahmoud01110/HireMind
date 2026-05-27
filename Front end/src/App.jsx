@@ -6,6 +6,7 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -38,6 +39,7 @@ function AppRoutes() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const { jobRole } = useParams();
   const navigate = useNavigate();
 
   // ✅ 🔥 FIX: sync state with localStorage

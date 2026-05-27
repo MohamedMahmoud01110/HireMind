@@ -3,18 +3,29 @@ import Sidebar from "../components/dashboard/Sidebar";
 import AssessmentHeader from "../components/assessment/AssessmentHeader";
 import QuestionCard from "../components/assessment/QuestionCard";
 import NavigationButtons from "../components/assessment/NavigationButtons";
+import { getJobRole } from "../apis/userApi";
 import {
   ASSESSMENT_QUESTIONS,
   TOTAL_TIME_SECONDS,
 } from "../data/assessmentQuestions";
 import { Helmet } from "react-helmet-async";
+import { getPreAssessment } from "../apis/preAssessmentApi";
+import {
+  deletePreAssessmentResult,
+  getPreAssessmentResult,
+  getQuestionsByPreAssessmentId,
+  submitPreAssessmentAnswers,
+} from "../apis/preAssessmentQuestionsApi";
+import Loading from "../components/Loading";
+import AssessmentAlreadyTakenModal from "../components/AssessmentAlreadyTakenModal";
+import { useNavigate } from "react-router-dom";
 
 const LS_KEY = "hiremind_assessment_answers";
 
 /* ═══════════════════════════════════════════════════════════════
    QuestionDotNav — clickable mini dots showing answered status
 ═══════════════════════════════════════════════════════════════ */
-function QuestionDotNav({ total, current, answers, onJump }) {
+function QuestionDotNav({ questions, total, current, answers, onJump }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
       <p
@@ -25,7 +36,10 @@ function QuestionDotNav({ total, current, answers, onJump }) {
       </p>
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: total }, (_, i) => {
-          const isAnswered = answers[i] !== undefined && answers[i] !== null;
+          const questionId = questions[i]?._id;
+          // const isAnswered =
+          //   answers[questionId] !== undefined && answers[questionId] !== null;
+          const isAnswered = Boolean(answers[questionId]);
           const isCurrent = i === current;
           return (
             <button
@@ -76,7 +90,13 @@ function QuestionDotNav({ total, current, answers, onJump }) {
 /* ═══════════════════════════════════════════════════════════════
    SubmitConfirmModal
 ═══════════════════════════════════════════════════════════════ */
-function SubmitConfirmModal({ answeredCount, total, onConfirm, onCancel }) {
+function SubmitConfirmModal({
+  answeredCount,
+  total,
+  onConfirm,
+  onCancel,
+  isSubmitted,
+}) {
   const unanswered = total - answeredCount;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -126,7 +146,7 @@ function SubmitConfirmModal({ answeredCount, total, onConfirm, onCancel }) {
             className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-[13px] font-bold hover:bg-emerald-500 transition-all"
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            Submit Now
+            {isSubmitted ? "Submitting..." : "Submit Now"}
           </button>
         </div>
       </div>
@@ -176,16 +196,24 @@ export default function AssessmentPage({
   onLogout,
   onNavigate,
 }) {
-  const questions = ASSESSMENT_QUESTIONS;
-  const total = questions.length;
+  // const questions = ASSESSMENT_QUESTIONS;
 
   /* ── Core state ── */
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isRetake, setIsRetake] = useState(false);
+  const [jobRole, setJobRole] = useState("");
+  const [preAssessmentQuestions, setPreAssessmentQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
+  const [result, setResult] = useState(null);
+  const hasResult = Boolean(result);
   const [answers, setAnswers] = useState(() => {
-    // Restore from localStorage on mount
     try {
-      const saved = localStorage.getItem(LS_KEY);
-      return saved ? JSON.parse(saved) : {};
+      const saved = JSON.parse(localStorage.getItem(LS_KEY));
+
+      if (!saved || typeof saved !== "object") return {};
+      return saved;
     } catch {
       return {};
     }
@@ -193,9 +221,91 @@ export default function AssessmentPage({
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_SECONDS);
   const [transitioning, setTransitioning] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  // const [takeAssessment, setTakeAssessment] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
-
   const timerRef = useRef(null);
+  const questions = preAssessmentQuestions || [];
+  const total = questions?.length || 0;
+
+  //
+  /* ── Derived values ── */
+  const currentQuestion = questions[currentIndex];
+  const selectedAnswer = answers[currentQuestion?._id] ?? null;
+  const answeredCount = Object.keys(answers).length;
+  // fetch user job role
+  useEffect(() => {
+    const fetchRole = async () => {
+      const role = await getJobRole();
+      const jobRole = role.data.jobRole;
+      setJobRole(jobRole);
+
+      // console.log(jobRole);
+    };
+
+    fetchRole();
+  }, []);
+
+  // filter answers based on current questions
+  useEffect(() => {
+    if (!questions.length) return;
+
+    setAnswers((prev) => {
+      const validIds = new Set(questions.map((q) => q._id));
+
+      const filtered = {};
+
+      Object.entries(prev).forEach(([key, value]) => {
+        if (validIds.has(key)) {
+          filtered[key] = value;
+        }
+      });
+
+      return filtered;
+    });
+  }, [questions]);
+  // fetch questions based on  pre assessment id that based on job role
+
+  useEffect(() => {
+    if (!jobRole) return;
+
+    const normalizeTitle = (str) =>
+      str
+        .toLowerCase()
+        .split(" ")
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // 1 check if user already took assessment
+        const resultRes = await getPreAssessmentResult(jobRole);
+        // console.log(resultRes);
+        if (resultRes) {
+          setResult(resultRes);
+          return;
+        }
+        // 2 if not taken → fetch questions
+        const questionsRes = await getQuestionsByPreAssessmentId(
+          normalizeTitle(jobRole),
+        );
+        // console.log(questionsRes);
+
+        const questions = questionsRes || [];
+
+        const shuffled = [...questions].sort(() => 0.5 - Math.random());
+        setPreAssessmentQuestions(shuffled.slice(0, 20));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [jobRole]);
 
   /* ── Persist answers to localStorage ── */
   useEffect(() => {
@@ -238,21 +348,26 @@ export default function AssessmentPage({
 
   /* ── Handlers ── */
   const handleSelect = (optionIndex) => {
-    setAnswers((prev) => ({ ...prev, [currentIndex]: optionIndex }));
+    const selectedOption = currentQuestion.options[optionIndex];
+    const answerLetter = selectedOption.charAt(0);
+    setAnswers((prev) => ({ ...prev, [currentQuestion._id]: answerLetter }));
   };
 
   const handleNext = useCallback(() => {
-    if (answers[currentIndex] === undefined) return;
+    if (answers[currentQuestion?._id] === undefined) return;
+
     if (currentIndex === total - 1) {
       setShowConfirm(true);
       return;
     }
+
     setTransitioning(true);
+
     setTimeout(() => {
       setCurrentIndex((i) => i + 1);
       setTransitioning(false);
     }, 120);
-  }, [currentIndex, answers, total]);
+  }, [currentIndex, answers, total, currentQuestion]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex === 0) return;
@@ -272,22 +387,67 @@ export default function AssessmentPage({
     }, 120);
   };
 
-  const handleConfirmSubmit = () => {
-    clearInterval(timerRef.current);
-    localStorage.removeItem(LS_KEY);
-    setShowConfirm(false);
-    goNext?.();
+  const handleConfirmSubmit = async () => {
+    try {
+      setIsSubmitted(true);
+      clearInterval(timerRef.current);
+
+      const res = await submitPreAssessmentAnswers(jobRole, answers);
+      // console.log("FULL RESPONSE:", res);
+      setResult(res);
+
+      localStorage.removeItem(LS_KEY);
+
+      // setTakeAssessment(true);
+    } catch (error) {
+      console.log(error.response?.data);
+    } finally {
+      setIsSubmitted(false);
+    }
   };
 
-  /* ── Derived values ── */
-  const currentQuestion = questions[currentIndex];
-  const selectedAnswer = answers[currentIndex] ?? null;
-  const answeredCount = Object.keys(answers).length;
+  const handleRetake = async () => {
+    try {
+      setIsRetake(true);
+
+      await deletePreAssessmentResult(jobRole);
+
+      setResult(null);
+      setShowConfirm(false);
+
+      const normalizeTitle = (str) =>
+        str
+          .toLowerCase()
+          .split(" ")
+          .filter(Boolean)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+
+      const questionsRes = await getQuestionsByPreAssessmentId(
+        normalizeTitle(jobRole),
+      );
+
+      const questions = questionsRes || [];
+
+      const shuffled = [...questions].sort(() => 0.5 - Math.random());
+
+      setPreAssessmentQuestions(shuffled.slice(0, 20));
+
+      setCurrentIndex(0);
+      setAnswers({});
+
+      localStorage.removeItem(LS_KEY);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsRetake(false);
+    }
+  };
 
   return (
     <>
       <Helmet>
-        <title>HireMind-Assessment</title>
+        <title>HireMind-PreAssessment</title>
       </Helmet>
       <div
         className="flex min-h-screen bg-[#f0f4ff]"
@@ -297,83 +457,98 @@ export default function AssessmentPage({
           backgroundSize: "32px 32px",
         }}
       >
-        {/* Time-up overlay */}
+        {/* ───────── Overlays ───────── */}
+
         {timeUp && <TimeUpBanner />}
 
-        {/* Confirm submit modal */}
         {showConfirm && (
           <SubmitConfirmModal
             answeredCount={answeredCount}
             total={total}
+            isSubmitted={isSubmitted}
             onConfirm={handleConfirmSubmit}
             onCancel={() => setShowConfirm(false)}
           />
         )}
 
-        {/* ── Sidebar ── */}
-        <Sidebar
-          activeKey="assessment"
-          onNavigate={onNavigate}
-          onLogout={onLogout}
-        />
+        {/* ───────── Sidebar ───────── */}
 
-        {/* ── Main content ── */}
+        <aside className="shrink-0">
+          <Sidebar
+            activeKey="assessment"
+            onNavigate={onNavigate}
+            onLogout={onLogout}
+          />
+        </aside>
+
+        {/* ───────── Main Content ───────── */}
+
         <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0">
-          <div className="max-w-3xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-5">
-            {/* Assessment header: title + timer + progress bar */}
-            <AssessmentHeader
-              currentIndex={currentIndex}
-              total={total}
-              timeLeft={timeLeft}
-            />
+          <section className="max-w-3xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-5">
+            {/* Loading State */}
+            {isLoading ? (
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <Loading />
+              </div>
+            ) : hasResult ? (
+              /* Already Taken State */
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <AssessmentAlreadyTakenModal
+                  open={hasResult}
+                  result={result}
+                  onClose={() => {
+                    (setResult(null), navigate("/interview"));
+                  }}
+                  onRetake={handleRetake}
+                  isRetake={isRetake}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Header */}
+                <AssessmentHeader
+                  currentIndex={currentIndex}
+                  total={total}
+                  timeLeft={timeLeft}
+                />
 
-            {/* Question dot navigator */}
-            <QuestionDotNav
-              total={total}
-              current={currentIndex}
-              answers={answers}
-              onJump={handleJump}
-            />
+                {/* Progress Dots */}
+                <QuestionDotNav
+                  total={total}
+                  current={currentIndex}
+                  answers={answers}
+                  onJump={handleJump}
+                  questions={questions}
+                />
 
-            {/* Question card — opacity transition on question change */}
-            <div
-              className="transition-opacity duration-120"
-              style={{ opacity: transitioning ? 0 : 1 }}
-            >
-              <QuestionCard
-                questionData={currentQuestion}
-                selectedAnswer={selectedAnswer}
-                onSelect={handleSelect}
-                questionIndex={currentIndex}
-              />
-            </div>
+                {/* Question Card */}
+                <div
+                  className="transition-opacity duration-150"
+                  style={{ opacity: transitioning ? 0 : 1 }}
+                >
+                  {currentQuestion && (
+                    <QuestionCard
+                      questionData={currentQuestion}
+                      selectedAnswer={selectedAnswer}
+                      onSelect={handleSelect}
+                      questionIndex={currentIndex}
+                    />
+                  )}
+                </div>
 
-            {/* Navigation: prev / next / submit */}
-            <NavigationButtons
-              currentIndex={currentIndex}
-              total={total}
-              canProceed={selectedAnswer !== null}
-              disabled={transitioning || timeUp}
-              onPrev={handlePrev}
-              onNext={handleNext}
-              onSubmit={() => setShowConfirm(true)}
-            />
-
-            {/* Keyboard hint */}
-            <p
-              className="text-center text-[11px] text-gray-300 pb-4"
-              style={{ fontFamily: "'Manrope', sans-serif" }}
-            >
-              Tip: use{" "}
-              <kbd className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 text-[10px] font-mono">
-                ←
-              </kbd>{" "}
-              <kbd className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 text-[10px] font-mono">
-                →
-              </kbd>{" "}
-              arrow keys to navigate
-            </p>
-          </div>
+                {/* Navigation */}
+                <NavigationButtons
+                  currentIndex={currentIndex}
+                  total={total}
+                  canProceed={selectedAnswer !== null}
+                  disabled={transitioning || timeUp}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                  onSubmit={() => setShowConfirm(true)}
+                />
+              </>
+            )}
+          </section>
         </main>
       </div>
     </>
