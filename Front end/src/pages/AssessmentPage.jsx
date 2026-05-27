@@ -19,6 +19,7 @@ import {
 import Loading from "../components/Loading";
 import AssessmentAlreadyTakenModal from "../components/AssessmentAlreadyTakenModal";
 import { useNavigate } from "react-router-dom";
+import NoJobRoleState from "../components/NoJobRoleState";
 
 const LS_KEY = "hiremind_assessment_answers";
 
@@ -266,7 +267,7 @@ export default function AssessmentPage({
   // fetch questions based on  pre assessment id that based on job role
 
   useEffect(() => {
-    if (!jobRole) return;
+    if (!jobRole) return <NoJobRoleState />;
 
     const normalizeTitle = (str) =>
       str
