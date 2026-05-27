@@ -338,7 +338,7 @@ export default function AssessmentPage({
   useEffect(() => {
     const handler = (e) => {
       if (showConfirm || transitioning || timeUp) return;
-      if (e.key === "ArrowRight" && answers[currentIndex] !== undefined)
+      if (e.key === "ArrowRight" && answers[currentQuestion?._id] !== undefined)
         handleNext();
       if (e.key === "ArrowLeft" && currentIndex > 0) handlePrev();
     };

@@ -25,12 +25,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://hire-mind-livid.vercel.app",
+        "http://localhost:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 MAX_FILE_SIZE_BYTES: int = 10 * 1024 * 1024
 ALLOWED_CONTENT_TYPES: set[str] = {
     "application/pdf",

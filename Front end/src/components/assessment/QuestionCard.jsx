@@ -118,7 +118,7 @@ export default function QuestionCard({
             key={i}
             label={LABELS[i]}
             text={opt}
-            selected={selectedAnswer === i}
+            selected={selectedAnswer === LABELS[i]}
             onClick={() => onSelect(i)}
           />
         ))}
