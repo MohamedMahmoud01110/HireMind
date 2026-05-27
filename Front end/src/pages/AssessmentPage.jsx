@@ -197,7 +197,7 @@ export default function AssessmentPage({
   onNavigate,
 }) {
   // const questions = ASSESSMENT_QUESTIONS;
-
+  const LABELS = ["A", "B", "C", "D"];
   /* ── Core state ── */
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
