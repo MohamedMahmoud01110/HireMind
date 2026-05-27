@@ -267,7 +267,7 @@ export default function AssessmentPage({
   // fetch questions based on  pre assessment id that based on job role
 
   useEffect(() => {
-    if (!jobRole) return <NoJobRoleState />;
+    if (!jobRole) return ;
 
     const normalizeTitle = (str) =>
       str
@@ -487,8 +487,8 @@ export default function AssessmentPage({
 
         <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0">
           <section className="max-w-3xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-5">
-            {/* Loading State */}
-            {isLoading ? (
+            {!jobRole ? <NoJobRoleState />:
+            isLoading ? (
               <div className="flex min-h-[60vh] items-center justify-center">
                 <Loading />
               </div>
