@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
-  // baseURL: "https://hiremind-production.up.railway.app/api",
+  // baseURL: "http://localhost:5000/api",
+  baseURL: "https://hiremind-production.up.railway.app/api",
 });
 
 export const AnalyzeCvAPI = axios.create({
