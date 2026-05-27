@@ -45,17 +45,19 @@ export default function SignupPage({ setUserData, goNext }) {
       cv: cvFile?.name || null,
     };
     // localStorage.setItem('userData', JSON.stringify(user))
+    // localStorage.setItem('token', res.data.token)
     try {
+      setSubmitted(true);
       const res = await registerUser(user);
-
       setUserData?.(res.data.user);
       localStorage.setItem("token", res.data.token);
-      setSubmitted(true);
-      console.log(res);
+      // console.log(res);
 
       goNext();
     } catch (err) {
       console.log(err.response?.data || err.message);
+    } finally {
+      setSubmitted(false);
     }
   };
 
@@ -190,7 +192,7 @@ export default function SignupPage({ setUserData, goNext }) {
                 <p className="text-red-500 text-sm">{errors.general}</p>
               )}
               <Button type="submit" variant="primary" size="lg" fullWidth>
-                Create Account →
+                {submitted ? "Submitting..." : "Create Account →"}
               </Button>
 
               {/* Divider */}
