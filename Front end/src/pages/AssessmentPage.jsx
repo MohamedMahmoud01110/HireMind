@@ -348,8 +348,9 @@ export default function AssessmentPage({
 
   /* ── Handlers ── */
   const handleSelect = (optionIndex) => {
-    const selectedOption = currentQuestion.options[optionIndex];
-    const answerLetter = selectedOption.charAt(0);
+    // const selectedOption = currentQuestion.options[optionIndex];
+    // const answerLetter = selectedOption.charAt(0);
+    const answerLetter = LABELS[optionIndex];
     setAnswers((prev) => ({ ...prev, [currentQuestion._id]: answerLetter }));
   };
 
