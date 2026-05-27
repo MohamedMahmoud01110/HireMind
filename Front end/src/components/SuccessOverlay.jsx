@@ -1,5 +1,5 @@
-import React from 'react'
-import Button from './Button'
+import React from "react";
+import Button from "./Button";
 
 /**
  * Full-screen success state displayed after a valid form submission.
@@ -23,12 +23,13 @@ export default function SuccessOverlay({ name, onReset }) {
       </h2>
 
       <p className="text-sm text-gray-500 text-center max-w-xs mb-8">
-        Welcome to HireMind, <strong>{name}</strong>. Your journey to landing your dream job starts now.
+        Welcome to HireMind, <strong>{name}</strong>. Your journey to landing
+        your dream job starts now.
       </p>
-
+      {/* 
       <Button variant="outline" size="md" onClick={onReset}>
         ← Back to form
-      </Button>
+      </Button> */}
     </div>
-  )
+  );
 }
