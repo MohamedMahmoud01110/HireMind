@@ -58,7 +58,9 @@ export default function LoginPage({ setUserData }) {
       localStorage.setItem("token", res.data.token);
       setLoading(false);
 
-      if (!user.role) {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (!user.role) {
         navigate("/experience");
       } else {
         navigate("/dashboard");

@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const PreAssessmentResult = require("../models/PreAssessmentResult");
 const bcrypt = require("bcryptjs");
 
 // Get profile
@@ -79,14 +80,50 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
-// get all users only for admin account
+// get all users only for admin account (includes latest pre-assessment score)
 exports.getAllUsers = async (req, res) => {
-  const users = await User.find().select("-password");
-  res.json({
-    success: true,
-    total: users.length,
-    users,
-  });
+  try {
+    const users = await User.find().select("-password").lean();
+
+    const studentIds = users
+      .filter((u) => u.role === "student")
+      .map((u) => u._id);
+
+    const results = await PreAssessmentResult.find({
+      studentId: { $in: studentIds },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const scoreByStudent = {};
+    for (const result of results) {
+      const id = result.studentId.toString();
+      if (!scoreByStudent[id]) {
+        scoreByStudent[id] = {
+          score: result.score,
+          total: result.total,
+          percentage: result.percentage,
+          completedAt: result.createdAt,
+        };
+      }
+    }
+
+    const usersWithScores = users.map((user) => ({
+      ...user,
+      preAssessment: scoreByStudent[user._id.toString()] || null,
+    }));
+
+    res.json({
+      success: true,
+      total: usersWithScores.length,
+      users: usersWithScores,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 exports.deleteUser = async (req, res) => {
@@ -126,6 +163,21 @@ exports.deleteUserById = async (req, res) => {
     res.json({
       success: true,
       message: "User deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+exports.deleteAllUsers = async (req, res) => {
+  try {
+    await User.deleteMany({role: { $ne: "admin" }}); // delete all users except admin
+
+    res.json({
+      success: true,
+      message: "All users deleted successfully",
     });
   } catch (error) {
     res.status(500).json({

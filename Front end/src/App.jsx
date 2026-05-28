@@ -21,6 +21,7 @@ import AIInterviewPage from "./pages/AIInterviewPage";
 import MyReportPage from "./pages/MyReportPage";
 import PaymentPage from "./pages/PaymentPage";
 import SettingsPage from "./pages/SettingsPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 const NAV_MAP = {
   dashboard: "/dashboard",
@@ -68,6 +69,12 @@ function AppRoutes() {
     return userData?.email ? component : <Navigate to="/login" />;
   };
 
+  const adminProtect = (component) => {
+    if (!userData?.email) return <Navigate to="/login" />;
+    if (userData?.role !== "admin") return <Navigate to="/dashboard" />;
+    return component;
+  };
+
   return (
     <Routes>
       {/* Root */}
@@ -75,7 +82,11 @@ function AppRoutes() {
         path="/"
         element={
           userData?.email ? (
-            <Navigate to="/dashboard" />
+            userData.role === "admin" ? (
+              <Navigate to="/admin" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -143,6 +154,14 @@ function AppRoutes() {
             goNext={() => goTo("/dashboard")} // ✅ صح
             goBack={() => goTo("/skills")}
           />,
+        )}
+      />
+
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={adminProtect(
+          <AdminDashboardPage userData={userData} onLogout={logout} />,
         )}
       />
 

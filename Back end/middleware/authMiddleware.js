@@ -9,7 +9,7 @@ const auth = (roles = []) => {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
-      if (roles.length && !req.user?.role) {
+      if (roles.length && !roles.includes(req.user?.role)) {
         return res
           .status(403)
           .json({ message: "Access denied - insufficient permissions" });
