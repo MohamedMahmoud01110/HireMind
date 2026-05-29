@@ -5,6 +5,10 @@ import QuestionCard from "../components/assessment/QuestionCard";
 import NavigationButtons from "../components/assessment/NavigationButtons";
 import { getJobRole } from "../apis/userApi";
 import {
+  getScoreByTitle,
+  useUpdateUserScore,
+} from "../hooks/useUserProfile";
+import {
   ASSESSMENT_QUESTIONS,
   TOTAL_TIME_SECONDS,
 } from "../data/assessmentQuestions";
@@ -20,6 +24,7 @@ import Loading from "../components/Loading";
 import AssessmentAlreadyTakenModal from "../components/AssessmentAlreadyTakenModal";
 import { useNavigate } from "react-router-dom";
 import NoJobRoleState from "../components/NoJobRoleState";
+import { useQueryClient } from "@tanstack/react-query";
 
 const LS_KEY = "hiremind_assessment_answers";
 
@@ -222,7 +227,8 @@ export default function AssessmentPage({
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_SECONDS);
   const [transitioning, setTransitioning] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  // const [takeAssessment, setTakeAssessment] = useState(false);
+  const queryClient = useQueryClient();
+  const updateScore = useUpdateUserScore();
   const [timeUp, setTimeUp] = useState(false);
   const timerRef = useRef(null);
   const questions = preAssessmentQuestions || [];
@@ -395,18 +401,12 @@ export default function AssessmentPage({
       clearInterval(timerRef.current);
 
       const res = await submitPreAssessmentAnswers(jobRole, answers);
-      // console.log("FULL RESPONSE:", res);
       setResult(res);
-      await updateProfile({
-        score: {
-          title: "Pre Assessment",
-          score: res.score,
-        },
+      await updateScore.mutateAsync({
+        title: "Pre Assessment",
+        score: Math.round((res.score / 20) * 100),
       });
-      
       localStorage.removeItem(LS_KEY);
-
-      // setTakeAssessment(true);
     } catch (error) {
       console.log(error.response?.data);
     } finally {
@@ -419,7 +419,9 @@ export default function AssessmentPage({
       setIsRetake(true);
 
       await deletePreAssessmentResult(jobRole);
-
+      await queryClient.invalidateQueries({
+        queryKey: ["preAssessmentResult"],
+      });
       setResult(null);
       setShowConfirm(false);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import JourneyProgress from "../components/dashboard/JourneyProgress";
 import ScoreCard from "../components/dashboard/ScoreCard";
@@ -8,19 +8,9 @@ import {
 } from "../components/dashboard/ActivityInsights";
 import NextSteps from "../components/dashboard/NextSteps";
 import { Helmet } from "react-helmet-async";
-import { getPreAssessmentResult } from "../apis/preAssessmentQuestionsApi";
-import { getPreAssessmentId } from "../apis/preAssessmentApi";
-import { getProfile, updateProfile } from "../apis/userApi";
+import { useUserScores } from "../hooks/useUserProfile";
+import Loading from "../components/Loading";
 
-/* ─── Mock data ─────────────────────────────────────────────── */
-let baseScores = [
-  { title: "CV", icon: "📄", score: 0, color: "blue" },
-  { title: "Pre Assessment", icon: "📝", score: 0, color: "violet" },
-  { title: "Interview", icon: "🎙️", score: 0, color: "amber" },
-  { title: "Overall", icon: "🏆", score: 0, color: "emerald" },
-];
-
-/* ─── Section heading ────────────────────────────────────────── */
 function SectionHeading({ title, subtitle }) {
   return (
     <div className="mb-4">
@@ -42,54 +32,10 @@ function SectionHeading({ title, subtitle }) {
   );
 }
 
-/* ─── DashboardPage ──────────────────────────────────────────── */
 export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
   const firstName = userData?.name?.split(" ")[0] || "there";
-  const jobRole = userData?.jobRole;
-  const [userScores, setUserScores] = useState([]);
-  useEffect(() => {
-    const fetchResult = async () => {
-      try {
-        const user = await getProfile();
-        // console.log("user", user.data);
+  const { scores, userScores, scoresLoading } = useUserScores();
 
-        setUserScores(user.data?.scores || []);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchResult();
-  }, []);
-
-  // const SCORES = useMemo(() => {
-  //   return baseScores.map((item) => ({
-  //     ...item,
-  //     score: userScores.find((s) => s.title === item.title)?.score || 0,
-  //   }));
-  // }, [userScores]);
-  // console.log(SCORES);
-
-  const SCORES = useMemo(() => {
-    const scores = baseScores.map((item) => ({
-      ...item,
-      score: userScores.find((s) => s.title === item.title)?.score || 0,
-    }));
-
-    // get scores except Overall
-    const cv = scores.find((s) => s.title === "CV")?.score || 0;
-    const preAssessment =
-      scores.find((s) => s.title === "Pre Assessment")?.score || 0;
-    const interview = scores.find((s) => s.title === "Interview")?.score || 0;
-
-    // calculate overall
-    const overallScore = Math.round((cv + preAssessment + interview) / 3);
-
-    // inject overall
-    return scores.map((s) =>
-      s.title === "Overall" ? { ...s, score: overallScore } : s,
-    );
-  }, [userScores]);
   return (
     <>
       <Helmet>
@@ -103,17 +49,14 @@ export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
           backgroundSize: "32px 32px",
         }}
       >
-        {/* ── Sidebar ── */}
         <Sidebar
           activeKey="dashboard"
           onNavigate={onNavigate}
           onLogout={onLogout}
         />
 
-        {/* ── Main content ── */}
         <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0">
           <div className="max-w-5xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-7">
-            {/* ── 1. Welcome ── */}
             <section>
               <h1
                 className="text-[26px] font-bold text-gray-900 leading-tight"
@@ -129,25 +72,37 @@ export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
               </p>
             </section>
 
-            {/* ── 2. Journey Progress ── */}
             <section>
-              <JourneyProgress userScores={userScores} />
+              {scoresLoading ? (
+                <Loading />
+              ) : (
+                <JourneyProgress userScores={userScores} />
+              )}
             </section>
 
-            {/* ── 3. Score Cards ── */}
             <section>
               <SectionHeading
                 title="Score Overview"
                 subtitle="Your performance across all modules"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {SCORES.map((s) => (
-                  <ScoreCard key={s.title} {...s} />
-                ))}
-              </div>
+              {scoresLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-5 h-[180px] animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {scores.map((s) => (
+                    <ScoreCard key={s.title} {...s} />
+                  ))}
+                </div>
+              )}
             </section>
 
-            {/* ── 4. Activity & Insights ── */}
             <section>
               <SectionHeading
                 title="Activity & Insights"
@@ -159,7 +114,6 @@ export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
               </div>
             </section>
 
-            {/* ── 5. Next Steps (FIX هنا 👇) */}
             <section>
               <NextSteps onNavigate={onNavigate} />
             </section>

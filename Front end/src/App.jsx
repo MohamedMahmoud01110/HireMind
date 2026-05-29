@@ -6,7 +6,6 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { useParams } from "react-router-dom";
 
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -40,29 +39,26 @@ function AppRoutes() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const { jobRole } = userData || {};
   const navigate = useNavigate();
-
-  // ✅ 🔥 FIX: sync state with localStorage
-  useEffect(() => {
-    if (userData && userData.email) {
-      localStorage.setItem("userData", JSON.stringify(userData));
-    }
-  }, [userData]);
-
-  // ✅ logout
-  const logout = () => {
-    setUserData(null);
-    localStorage.removeItem("userData");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   const goTo = (path) => navigate(path);
 
   const handleSidebarNav = (key) => {
     const path = NAV_MAP[key];
     if (path) navigate(path);
+  };
+
+  useEffect(() => {
+    if (userData && userData.email) {
+      localStorage.setItem("userData", JSON.stringify(userData));
+    }
+  }, [userData]);
+
+  const logout = () => {
+    setUserData(null);
+    localStorage.removeItem("userData");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   // ✅ protect routes

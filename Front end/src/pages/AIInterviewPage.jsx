@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
-import { getProfile, updateProfile } from "../apis/userApi";
+import {
+  getScoreByTitle,
+  PROFILE_QUERY_KEY,
+  useUpdateUserScore,
+} from "../hooks/useUserProfile";
+import { getProfile } from "../apis/userApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ═══════════════════════════════════════════════════════════════
    DATA — Data Analyst Interview Questions
@@ -957,6 +963,8 @@ export default function AIInterviewPage({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [finished, setFinished] = useState(false);
   const [activeNav, setActiveNav] = useState("interview");
+  const queryClient = useQueryClient();
+  const updateScore = useUpdateUserScore();
 
   const total = INTERVIEW_QUESTIONS.length;
 
@@ -965,35 +973,24 @@ export default function AIInterviewPage({
       setCurrentIndex((i) => i + 1);
     } else {
       setFinished(true);
-      const user = await getProfile();
-      const scores = user.data.scores || [];
-      // console.log(scores);
 
-      const cvScore = scores[0].score;
-
-      // 5 correct out of 20 questions
-      const correctAnswers = scores[1].score;
-      const totalQuestions = 20;
-
-      const assessmentScore = (correctAnswers / totalQuestions) * 100;
-
-      // weighted result
+      const profile = await queryClient.fetchQuery({
+        queryKey: PROFILE_QUERY_KEY,
+        queryFn: getProfile,
+      });
+      const scores = profile?.scores || [];
+      const cvScore = getScoreByTitle(scores, "CV");
+      const assessmentScore = getScoreByTitle(scores, "Pre Assessment");
       const baseScore = cvScore * 0.8 + assessmentScore * 0.2;
-
       const randomOffset = Math.floor(Math.random() * 7) - 3;
-
       const finalScore = Math.max(
         0,
         Math.min(100, Math.round(baseScore + randomOffset)),
       );
 
-    
-      // console.log(finalScore);
-      const res = await updateProfile({
-        score: {
-          title: "Interview",
-          score: finalScore,
-        },
+      await updateScore.mutateAsync({
+        title: "Interview",
+        score: finalScore,
       });
     }
   };

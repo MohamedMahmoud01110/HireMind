@@ -65,6 +65,9 @@ exports.updateProfile = async (req, res) => {
   Object.assign(user, rest);
 
   await user.save();
+
+  const updated = await User.findById(req.user.id).select("-password");
+  res.status(200).json(updated);
 };
 
 // get my job role

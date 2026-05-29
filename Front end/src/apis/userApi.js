@@ -1,14 +1,13 @@
 import API from "./axios";
 
-// Get profile
 export const getProfile = async () => {
   const res = await API.get("/users/me");
-  return res;
+  return res.data;
 };
-// Update profile
+
 export const updateProfile = async (data) => {
   const res = await API.put("/users/me", data);
-  return res;
+  return res.data;
 };
 export const getJobRole = async () => {
   const res = await API.get("/users/me/job-role");

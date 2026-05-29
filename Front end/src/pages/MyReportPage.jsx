@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
-import { getProfile } from "../apis/userApi";
+import { useUserScores } from "../hooks/useUserProfile";
+import Loading from "../components/Loading";
 
 /* ═══════════════════════════════════════════════════════════════
    STATIC REPORT CONTENT (scores come from user profile)
@@ -978,22 +979,9 @@ export default function MyReportPage({
   onLogout,
 }) {
   const [fullReport, setFullReport] = useState(false);
-  const [userScores, setUserScores] = useState([]);
+  const { userScores, scoresLoading, scoresVersion } = useUserScores();
 
-  useEffect(() => {
-    const fetchResult = async () => {
-      try {
-        const res = await getProfile();
-        setUserScores(res.data?.scores || []);
-      } catch (error) {
-        console.error("Failed to load report scores:", error);
-      }
-    };
-
-    fetchResult();
-  }, []);
-
-  const data = useMemo(() => buildReportData(userScores), [userScores]);
+  const data = useMemo(() => buildReportData(userScores), [scoresVersion]);
 
   return (
     <>
@@ -1018,7 +1006,9 @@ export default function MyReportPage({
         {/* ── Main content ── */}
         <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0">
           <div className="max-w-5xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-6">
-            {fullReport ? (
+            {scoresLoading ? (
+              <Loading />
+            ) : fullReport ? (
               /* ══ FULL REPORT MODE ══ */
               <FullReport
                 data={data}
