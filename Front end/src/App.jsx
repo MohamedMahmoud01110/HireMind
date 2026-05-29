@@ -54,6 +54,7 @@ function AppRoutes() {
   const logout = () => {
     setUserData(null);
     localStorage.removeItem("userData");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
