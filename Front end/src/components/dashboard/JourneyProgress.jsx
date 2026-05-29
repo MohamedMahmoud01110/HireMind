@@ -1,39 +1,39 @@
-import React, { useMemo } from 'react'
+import React, { useMemo } from "react";
 
 const STEPS = [
-  { key: 'cv',         label: 'CV Upload',  icon: '📄' },
-  { key: 'assessment', label: 'PreAssessment', icon: '📝' },
-  { key: 'interview',  label: 'Interview',  icon: '🎙️' },
-  { key: 'report',     label: 'Report',     icon: '📊' },
-]
+  { key: "cv", label: "CV Analysis", icon: "📄" },
+  { key: "assessment", label: "PreAssessment", icon: "📝" },
+  { key: "interview", label: "Interview", icon: "🎙️" },
+  { key: "report", label: "Report", icon: "📊" },
+];
 
 const SCORE_TITLE_BY_STEP = {
-  cv: 'CV',
-  assessment: 'Pre Assessment',
-  interview: 'Interview',
-}
+  cv: "CV",
+  assessment: "Pre Assessment",
+  interview: "Interview",
+};
 
 export function getCompletedJourneySteps(userScores = []) {
   const hasScore = (title) => {
-    const entry = userScores.find((s) => s.title === title)
-    return entry != null && Number(entry.score) > 0
-  }
+    const entry = userScores.find((s) => s.title === title);
+    return entry != null && Number(entry.score) > 0;
+  };
 
-  const completed = []
+  const completed = [];
 
-  if (hasScore(SCORE_TITLE_BY_STEP.cv)) completed.push('cv')
-  if (hasScore(SCORE_TITLE_BY_STEP.assessment)) completed.push('assessment')
-  if (hasScore(SCORE_TITLE_BY_STEP.interview)) completed.push('interview')
+  if (hasScore(SCORE_TITLE_BY_STEP.cv)) completed.push("cv");
+  if (hasScore(SCORE_TITLE_BY_STEP.assessment)) completed.push("assessment");
+  if (hasScore(SCORE_TITLE_BY_STEP.interview)) completed.push("interview");
 
   if (
     hasScore(SCORE_TITLE_BY_STEP.cv) &&
     hasScore(SCORE_TITLE_BY_STEP.assessment) &&
     hasScore(SCORE_TITLE_BY_STEP.interview)
   ) {
-    completed.push('report')
+    completed.push("report");
   }
 
-  return completed
+  return completed;
 }
 
 function StepBadge({ step, completed }) {
@@ -42,18 +42,18 @@ function StepBadge({ step, completed }) {
       {/* Icon card */}
       <div
         className={[
-          'w-full max-w-[88px] rounded-xl border px-2 py-3 flex flex-col items-center gap-1.5 transition-all duration-200',
+          "w-full max-w-[88px] rounded-xl border px-2 py-3 flex flex-col items-center gap-1.5 transition-all duration-200",
           completed
-            ? 'bg-emerald-50 border-emerald-200'
-            : 'bg-gray-50 border-gray-200',
-        ].join(' ')}
+            ? "bg-emerald-50 border-emerald-200"
+            : "bg-gray-50 border-gray-200",
+        ].join(" ")}
       >
         <span className="text-xl leading-none">{step.icon}</span>
         <span
           className="text-[18px] leading-none"
-          aria-label={completed ? 'Completed' : 'Not completed'}
+          aria-label={completed ? "Completed" : "Not completed"}
         >
-          {completed ? '✅' : '❌'}
+          {completed ? "✅" : "❌"}
         </span>
       </div>
       {/* Label */}
@@ -64,7 +64,7 @@ function StepBadge({ step, completed }) {
         {step.label}
       </span>
     </div>
-  )
+  );
 }
 
 /**
@@ -74,8 +74,8 @@ export default function JourneyProgress({ userScores = [] }) {
   const completed = useMemo(
     () => getCompletedJourneySteps(userScores),
     [userScores],
-  )
-  const pct = Math.round((completed.length / STEPS.length) * 100)
+  );
+  const pct = Math.round((completed.length / STEPS.length) * 100);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
@@ -91,7 +91,7 @@ export default function JourneyProgress({ userScores = [] }) {
           <p className="text-[13px] text-gray-400">
             {pct === 100
               ? "You've completed all assessment steps! 🎉"
-              : `${STEPS.length - completed.length} step${STEPS.length - completed.length > 1 ? 's' : ''} remaining`}
+              : `${STEPS.length - completed.length} step${STEPS.length - completed.length > 1 ? "s" : ""} remaining`}
           </p>
         </div>
 
@@ -115,9 +115,10 @@ export default function JourneyProgress({ userScores = [] }) {
           className="h-full rounded-full transition-all duration-700"
           style={{
             width: `${pct}%`,
-            background: pct === 100
-              ? 'linear-gradient(90deg,#2563eb 0%,#10b981 100%)'
-              : '#2563eb',
+            background:
+              pct === 100
+                ? "linear-gradient(90deg,#2563eb 0%,#10b981 100%)"
+                : "#2563eb",
           }}
         />
       </div>
@@ -133,5 +134,5 @@ export default function JourneyProgress({ userScores = [] }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
