@@ -23,6 +23,38 @@ function formatJobRole(jobRole) {
   return match ? match.label : jobRole;
 }
 
+function parseUserScores(user) {
+  const scores = user.scores || [];
+  const get = (title) => {
+    const entry = scores.find((s) => s.title === title);
+    return entry && Number(entry.score) > 0 ? Number(entry.score) : null;
+  };
+
+  const cv = get("CV");
+  const preAssessment =
+    get("Pre Assessment") ??
+    (user.preAssessment?.percentage > 0
+      ? Number(user.preAssessment.percentage)
+      : null);
+  const interview = get("Interview");
+
+  let overall = get("Overall");
+  if (overall == null && cv != null && preAssessment != null && interview != null) {
+    overall = Math.round((cv + preAssessment + interview) / 3);
+  }
+
+  return { cv, preAssessment, interview, overall };
+}
+
+function ScoreCell({ score }) {
+  if (score == null) {
+    return <span className="text-slate-400">—</span>;
+  }
+  return (
+    <span className="font-semibold text-emerald-700">{score}%</span>
+  );
+}
+
 function StatCard({ label, value, accent }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-5">
@@ -91,13 +123,15 @@ export default function AdminDashboardPage({ userData, onLogout }) {
       if (roleFilter !== "all" && user.role !== roleFilter) return false;
       if (jobRoleFilter !== "all" && user.jobRole !== jobRoleFilter) return false;
 
-      const hasAssessment = Boolean(user.preAssessment);
-      if (assessmentFilter === "completed" && !hasAssessment) return false;
-      if (assessmentFilter === "none" && hasAssessment) return false;
+      const { preAssessment, overall } = parseUserScores(user);
+      const hasPreAssessment = preAssessment != null;
+
+      if (assessmentFilter === "completed" && !hasPreAssessment) return false;
+      if (assessmentFilter === "none" && hasPreAssessment) return false;
 
       if (min !== null || max !== null) {
-        if (!hasAssessment) return false;
-        const pct = user.preAssessment.percentage;
+        const pct = overall ?? preAssessment;
+        if (pct == null) return false;
         if (min !== null && pct < min) return false;
         if (max !== null && pct > max) return false;
       }
@@ -109,8 +143,20 @@ export default function AdminDashboardPage({ userData, onLogout }) {
   const stats = useMemo(() => {
     const students = users.filter((u) => u.role === "student").length;
     const companies = users.filter((u) => u.role === "company").length;
-    const withScores = users.filter((u) => u.preAssessment).length;
-    return { total: users.length, students, companies, withScores };
+    const withPreAssessment = users.filter(
+      (u) => parseUserScores(u).preAssessment != null,
+    ).length;
+    const fullJourney = users.filter((u) => {
+      const s = parseUserScores(u);
+      return s.cv != null && s.preAssessment != null && s.interview != null;
+    }).length;
+    return {
+      total: users.length,
+      students,
+      companies,
+      withPreAssessment,
+      fullJourney,
+    };
   }, [users]);
 
   const handleDeleteUser = async (id, name) => {
@@ -201,14 +247,19 @@ export default function AdminDashboardPage({ userData, onLogout }) {
         </header>
 
         <main className="max-w-7xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCard label="Total users" value={stats.total} accent="#2563eb" />
             <StatCard label="Students" value={stats.students} accent="#7c3aed" />
             <StatCard label="Companies" value={stats.companies} accent="#f97316" />
             <StatCard
               label="Pre-assessments done"
-              value={stats.withScores}
+              value={stats.withPreAssessment}
               accent="#059669"
+            />
+            <StatCard
+              label="Full journey complete"
+              value={stats.fullJourney}
+              accent="#0d9488"
             />
           </div>
 
@@ -292,7 +343,7 @@ export default function AdminDashboardPage({ userData, onLogout }) {
 
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold text-slate-600">
-                  Min score %
+                  Min overall %
                 </span>
                 <input
                   type="number"
@@ -307,7 +358,7 @@ export default function AdminDashboardPage({ userData, onLogout }) {
 
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold text-slate-600">
-                  Max score %
+                  Max overall %
                 </span>
                 <input
                   type="number"
@@ -355,7 +406,16 @@ export default function AdminDashboardPage({ userData, onLogout }) {
                         Job role
                       </th>
                       <th className="px-5 py-3.5 font-semibold text-slate-600">
+                        CV
+                      </th>
+                      <th className="px-5 py-3.5 font-semibold text-slate-600">
                         Pre-assessment
+                      </th>
+                      <th className="px-5 py-3.5 font-semibold text-slate-600">
+                        Interview
+                      </th>
+                      <th className="px-5 py-3.5 font-semibold text-slate-600">
+                        Overall
                       </th>
                       <th className="px-5 py-3.5 font-semibold text-slate-600 text-right">
                         Actions
@@ -363,7 +423,9 @@ export default function AdminDashboardPage({ userData, onLogout }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((user) => {
+                      const scores = parseUserScores(user);
+                      return (
                       <tr
                         key={user._id}
                         className="border-b border-slate-50 hover:bg-slate-50/50"
@@ -391,19 +453,28 @@ export default function AdminDashboardPage({ userData, onLogout }) {
                           {formatJobRole(user.jobRole)}
                         </td>
                         <td className="px-5 py-4">
-                          {user.preAssessment ? (
+                          <ScoreCell score={scores.cv} />
+                        </td>
+                        <td className="px-5 py-4">
+                          {scores.preAssessment != null ? (
                             <div>
-                              <span className="font-semibold text-emerald-700">
-                                {user.preAssessment.percentage}%
-                              </span>
-                              <span className="text-slate-400 text-xs ml-1">
-                                ({user.preAssessment.score}/
-                                {user.preAssessment.total})
-                              </span>
+                              <ScoreCell score={scores.preAssessment} />
+                              {user.preAssessment?.total != null && (
+                                <span className="text-slate-400 text-xs ml-1">
+                                  ({user.preAssessment.score}/
+                                  {user.preAssessment.total})
+                                </span>
+                              )}
                             </div>
                           ) : (
-                            <span className="text-slate-400">Not taken</span>
+                            <ScoreCell score={null} />
                           )}
+                        </td>
+                        <td className="px-5 py-4">
+                          <ScoreCell score={scores.interview} />
+                        </td>
+                        <td className="px-5 py-4">
+                          <ScoreCell score={scores.overall} />
                         </td>
                         <td className="px-5 py-4 text-right">
                           {user.role !== "admin" && (
@@ -422,7 +493,8 @@ export default function AdminDashboardPage({ userData, onLogout }) {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               </div>
