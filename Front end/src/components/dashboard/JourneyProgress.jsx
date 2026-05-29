@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 
 const STEPS = [
   { key: 'cv',         label: 'CV Upload',  icon: '📄' },
@@ -6,6 +6,35 @@ const STEPS = [
   { key: 'interview',  label: 'Interview',  icon: '🎙️' },
   { key: 'report',     label: 'Report',     icon: '📊' },
 ]
+
+const SCORE_TITLE_BY_STEP = {
+  cv: 'CV',
+  assessment: 'Pre Assessment',
+  interview: 'Interview',
+}
+
+export function getCompletedJourneySteps(userScores = []) {
+  const hasScore = (title) => {
+    const entry = userScores.find((s) => s.title === title)
+    return entry != null && Number(entry.score) > 0
+  }
+
+  const completed = []
+
+  if (hasScore(SCORE_TITLE_BY_STEP.cv)) completed.push('cv')
+  if (hasScore(SCORE_TITLE_BY_STEP.assessment)) completed.push('assessment')
+  if (hasScore(SCORE_TITLE_BY_STEP.interview)) completed.push('interview')
+
+  if (
+    hasScore(SCORE_TITLE_BY_STEP.cv) &&
+    hasScore(SCORE_TITLE_BY_STEP.assessment) &&
+    hasScore(SCORE_TITLE_BY_STEP.interview)
+  ) {
+    completed.push('report')
+  }
+
+  return completed
+}
 
 function StepBadge({ step, completed }) {
   return (
@@ -39,10 +68,13 @@ function StepBadge({ step, completed }) {
 }
 
 /**
- * @param {{ completed: string[] }} props
- *   completed — array of step keys that are done, e.g. ['cv','assessment','interview','report']
+ * @param {{ userScores?: { title: string, score: number }[] }} props
  */
-export default function JourneyProgress({ completed = ['cv', 'assessment', 'interview', 'report'] }) {
+export default function JourneyProgress({ userScores = [] }) {
+  const completed = useMemo(
+    () => getCompletedJourneySteps(userScores),
+    [userScores],
+  )
   const pct = Math.round((completed.length / STEPS.length) * 100)
 
   return (

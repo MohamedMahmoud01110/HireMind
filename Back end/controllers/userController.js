@@ -9,11 +9,62 @@ exports.getProfile = async (req, res) => {
 };
 
 // Update profile
+// exports.updateProfile = async (req, res) => {
+//   const { score, ...rest } = req.body;
+
+//   const updateQuery = { ...rest };
+
+//   if (score) {
+//     updateQuery.$push = {
+//       scores: score,
+//     };
+//   }
+
+//   const user = await User.findByIdAndUpdate(req.user.id, updateQuery, {
+//     new: true,
+//   }).select("-password");
+
+//   res.json(user);
+// };
+
+// exports.updateProfile = async (req, res) => {
+//   const { score, ...rest } = req.body;
+
+//   const update = {};
+
+//   if (Object.keys(rest).length) {
+//     update.$set = rest;
+//   }
+
+//   if (score) {
+//     update.$push = {
+//       scores: score,
+//     };
+//   }
+
+//   const user = await User.findByIdAndUpdate(req.user.id, update, {
+//     new: true,
+//   }).select("-password");
+
+//   res.json(user);
+// };
 exports.updateProfile = async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.user.id, req.body, {
-    new: true,
-  }).select("-password");
-  res.json(user);
+  const { score, ...rest } = req.body;
+  const user = await User.findById(req.user.id);
+
+  if (score) {
+    const index = user.scores.findIndex((s) => s.title === score.title);
+
+    if (index !== -1) {
+      user.scores[index].score = score.score;
+    } else {
+      user.scores.push(score);
+    }
+  }
+
+  Object.assign(user, rest);
+
+  await user.save();
 };
 
 // get my job role
@@ -27,7 +78,7 @@ exports.getJobRole = async (req, res) => {
 
 //delete me
 exports.deleteMe = async (req, res) => {
-  await User.deleteOne(req.user.id);
+  await User.findByIdAndDelete(req.user.id).select("-password");
   res.json({
     message: "User deleted successfully",
   });
@@ -173,7 +224,7 @@ exports.deleteUserById = async (req, res) => {
 };
 exports.deleteAllUsers = async (req, res) => {
   try {
-    await User.deleteMany({role: { $ne: "admin" }}); // delete all users except admin
+    await User.deleteMany({ role: { $ne: "admin" } }); // delete all users except admin
 
     res.json({
       success: true,

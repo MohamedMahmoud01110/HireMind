@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import JourneyProgress from "../components/dashboard/JourneyProgress";
 import ScoreCard from "../components/dashboard/ScoreCard";
@@ -8,16 +8,17 @@ import {
 } from "../components/dashboard/ActivityInsights";
 import NextSteps from "../components/dashboard/NextSteps";
 import { Helmet } from "react-helmet-async";
+import { getPreAssessmentResult } from "../apis/preAssessmentQuestionsApi";
+import { getPreAssessmentId } from "../apis/preAssessmentApi";
+import { getProfile, updateProfile } from "../apis/userApi";
 
 /* ─── Mock data ─────────────────────────────────────────────── */
-const SCORES = [
-  { title: "CV Score", icon: "📄", score: 82, color: "blue" },
-  { title: "PreAssessment Score", icon: "📝", score: 74, color: "violet" },
-  { title: "Interview Score", icon: "🎙️", score: 68, color: "amber" },
-  { title: "Overall Score", icon: "🏆", score: 75, color: "emerald" },
+let baseScores = [
+  { title: "CV", icon: "📄", score: 0, color: "blue" },
+  { title: "Pre Assessment", icon: "📝", score: 0, color: "violet" },
+  { title: "Interview", icon: "🎙️", score: 0, color: "amber" },
+  { title: "Overall", icon: "🏆", score: 0, color: "emerald" },
 ];
-
-const COMPLETED_STEPS = ["cv", "assessment", "interview", "report"];
 
 /* ─── Section heading ────────────────────────────────────────── */
 function SectionHeading({ title, subtitle }) {
@@ -44,7 +45,51 @@ function SectionHeading({ title, subtitle }) {
 /* ─── DashboardPage ──────────────────────────────────────────── */
 export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
   const firstName = userData?.name?.split(" ")[0] || "there";
+  const jobRole = userData?.jobRole;
+  const [userScores, setUserScores] = useState([]);
+  useEffect(() => {
+    const fetchResult = async () => {
+      try {
+        const user = await getProfile();
+        // console.log("user", user.data);
 
+        setUserScores(user.data?.scores || []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchResult();
+  }, []);
+
+  // const SCORES = useMemo(() => {
+  //   return baseScores.map((item) => ({
+  //     ...item,
+  //     score: userScores.find((s) => s.title === item.title)?.score || 0,
+  //   }));
+  // }, [userScores]);
+  // console.log(SCORES);
+
+  const SCORES = useMemo(() => {
+    const scores = baseScores.map((item) => ({
+      ...item,
+      score: userScores.find((s) => s.title === item.title)?.score || 0,
+    }));
+
+    // get scores except Overall
+    const cv = scores.find((s) => s.title === "CV")?.score || 0;
+    const preAssessment =
+      scores.find((s) => s.title === "Pre Assessment")?.score || 0;
+    const interview = scores.find((s) => s.title === "Interview")?.score || 0;
+
+    // calculate overall
+    const overallScore = Math.round((cv + preAssessment + interview) / 3);
+
+    // inject overall
+    return scores.map((s) =>
+      s.title === "Overall" ? { ...s, score: overallScore } : s,
+    );
+  }, [userScores]);
   return (
     <>
       <Helmet>
@@ -86,7 +131,7 @@ export default function DashboardPage({ userData = {}, onNavigate, onLogout }) {
 
             {/* ── 2. Journey Progress ── */}
             <section>
-              <JourneyProgress completed={COMPLETED_STEPS} />
+              <JourneyProgress userScores={userScores} />
             </section>
 
             {/* ── 3. Score Cards ── */}

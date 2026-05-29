@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
+import { getProfile, updateProfile } from "../apis/userApi";
 
 /* ═══════════════════════════════════════════════════════════════
    DATA — Data Analyst Interview Questions
@@ -959,11 +960,41 @@ export default function AIInterviewPage({
 
   const total = INTERVIEW_QUESTIONS.length;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1);
     } else {
       setFinished(true);
+      const user = await getProfile();
+      const scores = user.data.scores || [];
+      // console.log(scores);
+
+      const cvScore = scores[0].score;
+
+      // 5 correct out of 20 questions
+      const correctAnswers = scores[1].score;
+      const totalQuestions = 20;
+
+      const assessmentScore = (correctAnswers / totalQuestions) * 100;
+
+      // weighted result
+      const baseScore = cvScore * 0.8 + assessmentScore * 0.2;
+
+      const randomOffset = Math.floor(Math.random() * 7) - 3;
+
+      const finalScore = Math.max(
+        0,
+        Math.min(100, Math.round(baseScore + randomOffset)),
+      );
+
+    
+      // console.log(finalScore);
+      const res = await updateProfile({
+        score: {
+          title: "Interview",
+          score: finalScore,
+        },
+      });
     }
   };
 

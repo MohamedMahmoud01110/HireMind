@@ -40,7 +40,7 @@ function AppRoutes() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const { jobRole } = useParams();
+  const { jobRole } = userData || {};
   const navigate = useNavigate();
 
   // ✅ 🔥 FIX: sync state with localStorage
@@ -139,13 +139,13 @@ function AppRoutes() {
           <SkillsStep
             userData={userData}
             setUserData={setUserData}
-            goNext={() => goTo("/job-role")}
+            goNext={() => goTo("/dashboard")}
             goBack={() => goTo("/tools")}
           />,
         )}
       />
 
-      <Route
+      {/* <Route
         path="/job-role"
         element={protect(
           <JobRoleStep
@@ -155,7 +155,7 @@ function AppRoutes() {
             goBack={() => goTo("/skills")}
           />,
         )}
-      />
+      /> */}
 
       {/* Admin */}
       <Route

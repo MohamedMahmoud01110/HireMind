@@ -35,12 +35,16 @@ export default function AssessmentAlreadyTakenModal({
 
         {/* Score box */}
         <div className="bg-gray-50 border rounded-xl p-4 mb-5 text-center">
-          <p className="text-sm text-gray-500">Your Score</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {score} / {total}
+          <p className="text-sm text-gray-500 mb-2">
+            You answered {total} out of 20 questions
           </p>
-          <p className="text-sm text-emerald-600 font-semibold">
-            {percentage}%
+
+          <p className="text-2xl font-bold text-gray-900">
+            Correct Answers: {score}
+          </p>
+
+          <p className="text-sm text-emerald-600 font-semibold mt-1">
+            Success Rate: {percentage}%
           </p>
         </div>
 

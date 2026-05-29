@@ -9,6 +9,12 @@ const userSchema = new mongoose.Schema({
   bio: String,
   skills: [String],
   cv: String,
+  scores: [
+    {
+      title: String,
+      score: Number,
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

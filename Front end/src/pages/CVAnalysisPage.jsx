@@ -4,6 +4,7 @@ import { analyzeCv } from "../apis/analyzeCvApi";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Helmet } from "react-helmet-async";
+import { updateProfile } from "../apis/userApi";
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════════════════════════════ */
@@ -590,14 +591,25 @@ export default function CVAnalysisPage({
   };
   const handleAnalyze = async () => {
     if (!file) return;
+
     setLoading(true);
     setResult(null);
+
     try {
       const formData = new FormData();
       formData.append("file", file);
+
       const res = await analyzeCv(formData);
-      console.log(res.data);
-      setResult(mapResult(res.data));
+
+      const mapped = mapResult(res.data);
+      setResult(mapped);
+
+      updateProfile({
+        score: {
+          title: "CV",
+          score: res.data.final_score || 0,
+        },
+      }).catch(console.log);
     } catch (err) {
       console.log(err);
     } finally {

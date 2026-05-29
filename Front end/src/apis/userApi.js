@@ -24,8 +24,8 @@ export const getAllUsers = async () => {
   return res.data;
 };
 
-export const deleteUserById = async (id) => {
-  const res = await API.delete(`/users/${id}`);
+export const deleteUserById = async () => {
+  const res = await API.delete(`/users/me`);
   return res.data;
 };
 

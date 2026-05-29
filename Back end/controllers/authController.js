@@ -38,6 +38,7 @@ exports.register = async (req, res) => {
           jobRole: user.jobRole,
           bio: user.bio,
           skills,
+          
         },
       },
     });
@@ -49,12 +50,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("BODY:", req.body);
+    // console.log("BODY:", req.body);
     const user = await User.findOne({ email: email.trim().toLowerCase() });
-    console.log("USER FOUND:", user);
+    // console.log("USER FOUND:", user);
 
     if (!user) return res.status(400).json({ message: "User not found" });
-    console.log("DB PASSWORD:", user.password);
+    // console.log("DB PASSWORD:", user.password);
     const isMatch = await bcrypt.compare(password, user.password);
     // console.log("MATCH:", isMatch);
     if (!isMatch)

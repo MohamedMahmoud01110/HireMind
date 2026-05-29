@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
-import { changePassword, updateProfile } from "../apis/userApi";
+import { changePassword, deleteUserById, updateProfile } from "../apis/userApi";
 import { Helmet } from "react-helmet-async";
+import DeleteAccountModal from "../components/deleteAccountModal";
+import { deletePreAssessmentResult } from "../apis/preAssessmentQuestionsApi";
+import { useNavigate } from "react-router-dom";
 
 /* ─── Data ───────────────────────────────────────────────────── */
 const JOB_ROLES = [
@@ -463,7 +466,59 @@ function ChangePasswordCard() {
     </Card>
   );
 }
+// function DangerZoneCard() {
+//   const [loading, setLoading] = useState(false);
 
+//   const handleDelete = async () => {
+//     const confirmDelete = window.confirm(
+//       "Are you sure you want to delete your account? This action cannot be undone.",
+//     );
+
+//     if (!confirmDelete) return;
+
+//     try {
+//       setLoading(true);
+
+//       await deleteAccount(); // API call
+
+//       // logout or redirect
+//       window.location.href = "/login";
+//     } catch (err) {
+//       console.log(err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <Card>
+//       <CardHeader
+//         icon="⚠️"
+//         title="Danger Zone"
+//         description="Irreversible actions for your account"
+//       />
+
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <p className="text-sm font-semibold text-gray-900">
+//             Delete your account
+//           </p>
+//           <p className="text-xs text-gray-400 mt-1">
+//             Once deleted, your data cannot be recovered.
+//           </p>
+//         </div>
+
+//         <button
+//           onClick={handleDelete}
+//           disabled={loading}
+//           className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition disabled:opacity-50"
+//         >
+//           {loading ? "Deleting..." : "Delete"}
+//         </button>
+//       </div>
+//     </Card>
+//   );
+// }
 /* ═══════════════════════════════════════════════════════════════
    SETTINGS PAGE — default export
    Props:
@@ -473,12 +528,29 @@ function ChangePasswordCard() {
 ═══════════════════════════════════════════════════════════════ */
 export default function SettingsPage({ userData = {}, onLogout, onNavigate }) {
   const [activeNav, setActiveNav] = useState("settings");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const jobRole = userData.jobRole;
+  const navigate = useNavigate();
 
   const handleNav = (key) => {
     setActiveNav(key);
     onNavigate?.(key);
   };
-
+  const handleDeleteAccount = async () => {
+    try {
+      setLoading(true);
+      await deleteUserById(req.user.id);
+      await deletePreAssessmentResult(jobRole);
+      localStorage.removeItem("userData");
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <Helmet>
@@ -518,6 +590,12 @@ export default function SettingsPage({ userData = {}, onLogout, onNavigate }) {
 
             <PersonalInfoCard userData={userData} />
             <ChangePasswordCard />
+            <DeleteAccountModal
+              open={open}
+              onClose={() => setOpen(false)}
+              loading={loading}
+              onConfirm={handleDeleteAccount}
+            />
           </div>
         </main>
       </div>

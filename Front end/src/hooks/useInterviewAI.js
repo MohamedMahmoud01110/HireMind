@@ -59,7 +59,7 @@ export default function useInterviewAI() {
     socket.connect(
       // onMessage
       (msg) => {
-        console.log(msg);
+        // console.log(msg);
 
         switch (msg.type) {
           case "question":

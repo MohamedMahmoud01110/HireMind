@@ -1,29 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
+import { getProfile } from "../apis/userApi";
 
 /* ═══════════════════════════════════════════════════════════════
-   MOCK DATA
+   STATIC REPORT CONTENT (scores come from user profile)
 ═══════════════════════════════════════════════════════════════ */
-const REPORT_DATA = {
-  overallScore: 76,
-  cvScore: 82,
-  assessmentScore: 74,
-  interviewScore: 71,
+const INTERVIEW_METRIC_TEMPLATES = [
+  { id: "communication", label: "Communication Clarity", icon: "💬", bias: 5 },
+  { id: "confidence", label: "Confidence Level", icon: "🎯", bias: 1 },
+  { id: "eyeContact", label: "Eye Contact", icon: "👁️", bias: -5 },
+  { id: "speechSpeed", label: "Speech Speed", icon: "🎙️", bias: 2 },
+  { id: "emotionalTone", label: "Emotional Tone", icon: "💡", bias: -7 },
+];
 
-  metrics: [
-    {
-      id: "communication",
-      label: "Communication Clarity",
-      icon: "💬",
-      score: 80,
-    },
-    { id: "confidence", label: "Confidence Level", icon: "🎯", score: 72 },
-    { id: "eyeContact", label: "Eye Contact", icon: "👁️", score: 65 },
-    { id: "speechSpeed", label: "Speech Speed", icon: "🎙️", score: 78 },
-    { id: "emotionalTone", label: "Emotional Tone", icon: "💡", score: 58 },
-  ],
-
+const REPORT_STATIC = {
   strengths: [
     "Clear articulation of technical concepts to non-technical audiences",
     "Strong use of the STAR method in behavioral answers",
@@ -148,6 +139,77 @@ const REPORT_DATA = {
     "Follow industry thought leaders and engage with their content weekly",
   ],
 };
+
+function getScoreByTitle(userScores, title) {
+  return userScores.find((s) => s.title === title)?.score ?? 0;
+}
+
+/** Stable -3..+3 variation per metric so scores feel natural, not identical. */
+function stableVariation(interviewScore, metricId) {
+  const key = `${interviewScore}-${metricId}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 7) - 3;
+}
+
+/**
+ * Derive interview sub-metrics from the overall interview score.
+ * Verbal skills tend slightly above base; body language / tone slightly below.
+ */
+function deriveInterviewMetrics(interviewScore) {
+  const base = Math.round(Number(interviewScore) || 0);
+
+  if (base <= 0) {
+    return INTERVIEW_METRIC_TEMPLATES.map(({ id, label, icon }) => ({
+      id,
+      label,
+      icon,
+      score: 0,
+    }));
+  }
+
+  const metrics = INTERVIEW_METRIC_TEMPLATES.map(({ id, label, icon, bias }) => ({
+    id,
+    label,
+    icon,
+    score: Math.max(0, Math.min(100, base + bias + stableVariation(base, id))),
+  }));
+
+  // Nudge average toward interview score without flattening all metrics
+  const avg = metrics.reduce((sum, m) => sum + m.score, 0) / metrics.length;
+  const correction = Math.round(base - avg);
+  if (correction !== 0 && Math.abs(correction) <= 6) {
+    const comm = metrics.find((m) => m.id === "communication");
+    if (comm) {
+      comm.score = Math.max(0, Math.min(100, comm.score + correction));
+    }
+  }
+
+  return metrics;
+}
+
+function buildReportData(userScores) {
+  const cvScore = getScoreByTitle(userScores, "CV");
+  const assessmentScore = getScoreByTitle(userScores, "Pre Assessment");
+  const interviewScore = getScoreByTitle(userScores, "Interview");
+  const storedOverall = getScoreByTitle(userScores, "Overall");
+  const overallScore =
+    storedOverall > 0
+      ? storedOverall
+      : Math.round((cvScore + assessmentScore + interviewScore) / 3);
+
+  return {
+    ...REPORT_STATIC,
+    overallScore,
+    cvScore,
+    assessmentScore,
+    interviewScore,
+    metrics: deriveInterviewMetrics(interviewScore),
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SCORE LEVEL SYSTEM
@@ -916,8 +978,22 @@ export default function MyReportPage({
   onLogout,
 }) {
   const [fullReport, setFullReport] = useState(false);
+  const [userScores, setUserScores] = useState([]);
 
-  const data = REPORT_DATA;
+  useEffect(() => {
+    const fetchResult = async () => {
+      try {
+        const res = await getProfile();
+        setUserScores(res.data?.scores || []);
+      } catch (error) {
+        console.error("Failed to load report scores:", error);
+      }
+    };
+
+    fetchResult();
+  }, []);
+
+  const data = useMemo(() => buildReportData(userScores), [userScores]);
 
   return (
     <>
