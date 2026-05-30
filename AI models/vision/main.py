@@ -132,6 +132,27 @@ from deepface_analyzer import enrich_emotion, mediapipe_emotion
 from stt_engine        import STTEngine
 
 
+def _build_visual_hints(video_result: dict, emotion_detected: bool) -> list[str]:
+    """Human-readable coaching lines derived from live vision signals."""
+    hints: list[str] = []
+    eye = video_result.get("eye") or {}
+    posture = video_result.get("posture") or {}
+    stress = (video_result.get("stress") or {}).get("level", "LOW")
+
+    if eye.get("looking_away"):
+        hints.append("Look at the camera")
+    if posture.get("slouching"):
+        hints.append("Sit up straighter — improve your posture")
+    if stress == "HIGH":
+        hints.append("You seem nervous — breathe and speak clearly")
+    elif stress == "MEDIUM":
+        hints.append("Stay calm and speak at a steady pace")
+    if not emotion_detected:
+        hints.append("Face the camera in good lighting")
+
+    return hints
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # FastAPI app
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1183,17 +1204,22 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             video_result = await loop.run_in_executor(
                 _VIDEO_EXECUTOR, session.process_frame, frame_bytes
             )
+            # print("FRAME RECEIVED", len(frame_bytes))
+            # print("VIDEO RESULT", video_result)
             if "error" not in video_result:
                 last_video_result = video_result
 
             mp_emo = mediapipe_emotion(video_result.get("emotion", {}))
+            emotion_detected = bool(mp_emo.get("label"))
+            visual_hints = _build_visual_hints(video_result, emotion_detected)
             await _safe_send({
                 "type": "visual_update",
                 "data": {
-                    "emotion_detected": bool(mp_emo.get("label")),
+                    "emotion_detected": emotion_detected,
                     "stress_level":     video_result.get("stress", {}).get("level", "LOW"),
                     "eye_away":         video_result.get("eye",     {}).get("looking_away", False),
                     "slouching":        video_result.get("posture", {}).get("slouching",    False),
+                    "hints":            visual_hints,
                 },
             })
         except asyncio.CancelledError:

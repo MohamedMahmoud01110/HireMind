@@ -280,6 +280,286 @@ function ElapsedTimer({ active }) {
   );
 }
 
+/* ─── Coaching helpers ─────────────────────────────────────────── */
+function getCoachingIcon(text) {
+  const t = text.toLowerCase();
+  if (t.includes("eye") || t.includes("camera") || t.includes("contact")) {
+    return "👁️";
+  }
+  if (t.includes("nervous") || t.includes("calm") || t.includes("breathe")) {
+    return "🧘";
+  }
+  if (t.includes("posture") || t.includes("sit") || t.includes("straight")) {
+    return "🧍";
+  }
+  if (
+    t.includes("speak") ||
+    t.includes("clear") ||
+    t.includes("pace") ||
+    t.includes("speed") ||
+    t.includes("voice")
+  ) {
+    return "🎙️";
+  }
+  if (t.includes("smile") || t.includes("energy") || t.includes("engage")) {
+    return "✨";
+  }
+  return "💡";
+}
+
+function formatCoachingLine(text) {
+  if (!text) return "";
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return /[.!?]$/.test(capitalized) ? capitalized : `${capitalized}.`;
+}
+
+function buildVisualCoaching(data = {}) {
+  if (data.hints?.length) return data.hints;
+
+  const tips = [];
+  if (data.eye_away) tips.push("Look at the camera");
+  if (data.slouching) tips.push("Sit up straighter — improve your posture");
+  if (data.stress_level === "HIGH") {
+    tips.push("You seem nervous — breathe and speak clearly");
+  } else if (data.stress_level === "MEDIUM") {
+    tips.push("Stay calm and speak at a steady pace");
+  }
+  if (data.emotion_detected === false) {
+    tips.push("Face the camera in good lighting");
+  }
+  return tips;
+}
+
+function mergeCoachingComments(comments = [], visualHints = []) {
+  const seen = new Set();
+  return [...visualHints, ...comments].filter((line) => {
+    const key = line.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function VisualStatusPill({ label, status, tone = "neutral" }) {
+  const tones = {
+    good: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    warn: "bg-amber-100 text-amber-800 border-amber-200",
+    bad: "bg-red-100 text-red-800 border-red-200",
+    neutral: "bg-slate-100 text-slate-600 border-slate-200",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${tones[tone]}`}
+      style={{ fontFamily: "'Manrope', sans-serif" }}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          tone === "good"
+            ? "bg-emerald-500"
+            : tone === "warn"
+              ? "bg-amber-500"
+              : tone === "bad"
+                ? "bg-red-500"
+                : "bg-slate-400"
+        }`}
+      />
+      {label}: {status}
+    </span>
+  );
+}
+
+function VisualStatusRow({ visual }) {
+  if (!visual) return null;
+
+  const stress = visual.stress_level || "LOW";
+  const stressTone =
+    stress === "HIGH" ? "bad" : stress === "MEDIUM" ? "warn" : "good";
+  const stressLabel =
+    stress === "HIGH" ? "High" : stress === "MEDIUM" ? "Medium" : "Low";
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <VisualStatusPill
+        label="Eye contact"
+        status={visual.eye_away ? "Look at camera" : "Good"}
+        tone={visual.eye_away ? "warn" : "good"}
+      />
+      <VisualStatusPill
+        label="Posture"
+        status={visual.slouching ? "Needs work" : "Good"}
+        tone={visual.slouching ? "warn" : "good"}
+      />
+      <VisualStatusPill label="Stress" status={stressLabel} tone={stressTone} />
+    </div>
+  );
+}
+
+function VideoVisualIndicators({ visual }) {
+  if (!visual) return null;
+
+  const stress = visual.stress_level || "LOW";
+  const stressColor =
+    stress === "HIGH"
+      ? "bg-red-500"
+      : stress === "MEDIUM"
+        ? "bg-amber-500"
+        : "bg-emerald-500";
+
+  return (
+    <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-black/55 backdrop-blur-sm rounded-full px-3 py-2">
+      <span
+        className={`w-2.5 h-2.5 rounded-full ${visual.eye_away ? "bg-red-500" : "bg-emerald-500"}`}
+        title={visual.eye_away ? "Eye contact: away" : "Eye contact: good"}
+      />
+      <span
+        className={`w-2.5 h-2.5 rounded-full ${visual.slouching ? "bg-amber-500" : "bg-emerald-500"}`}
+        title={visual.slouching ? "Posture: slouching" : "Posture: good"}
+      />
+      <span
+        className={`w-2.5 h-2.5 rounded-full ${stressColor}`}
+        title={`Stress: ${stress}`}
+      />
+    </div>
+  );
+}
+
+/* ─── LiveCoachingPanel ────────────────────────────────────────── */
+function LiveCoachingPanel({ coaching, recording, visible }) {
+  const { comments = [], adaptiveNote, visual, visualHints = [] } = coaching;
+  const mergedComments = mergeCoachingComments(comments, visualHints);
+  const hasTips = mergedComments.length > 0 || Boolean(adaptiveNote);
+  const allClear =
+    visual &&
+    !visual.eye_away &&
+    !visual.slouching &&
+    (visual.stress_level || "LOW") === "LOW";
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-blue-50 shadow-sm overflow-hidden animate-fade-up"
+      role="status"
+      aria-live="polite"
+      aria-label="Live AI coaching feedback"
+    >
+      <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-violet-100/80 bg-white/60">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center text-base">
+            🤖
+          </div>
+          <div>
+            <p
+              className="text-[13px] font-bold text-gray-900 leading-none"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              Live AI Coach
+            </p>
+            <p
+              className="text-[11px] text-violet-600 mt-0.5"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              Real-time interview guidance
+            </p>
+          </div>
+        </div>
+        {recording && (
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wide"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            Live
+          </span>
+        )}
+      </div>
+
+      <div className="px-5 py-4 flex flex-col gap-3">
+        <VisualStatusRow visual={visual} />
+
+        {!visual && !hasTips && (
+          <p
+            className="text-[13px] text-gray-500 text-center py-2"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
+          >
+            Analyzing your camera feed…
+          </p>
+        )}
+
+        {allClear && !hasTips && visual && (
+          <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-emerald-50 border border-emerald-200">
+            <span className="text-lg">✅</span>
+            <p
+              className="text-[13px] font-semibold text-emerald-800"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              Looking good — keep steady eye contact and posture.
+            </p>
+          </div>
+        )}
+
+        {adaptiveNote && (
+          <div
+            className="flex items-start gap-3 rounded-xl px-4 py-3.5 border"
+            style={{
+              background: "#fffbeb",
+              borderColor: "#fde68a",
+            }}
+          >
+            <span className="text-lg flex-shrink-0 mt-0.5" aria-hidden="true">
+              ⚡
+            </span>
+            <div>
+              <p
+                className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mb-1"
+                style={{ fontFamily: "'Manrope', sans-serif" }}
+              >
+                Coach insight
+              </p>
+              <p
+                className="text-[14px] font-semibold text-amber-900 leading-snug"
+                style={{ fontFamily: "'Manrope', sans-serif" }}
+              >
+                {formatCoachingLine(adaptiveNote)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {mergedComments.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {mergedComments.map((comment, index) => (
+              <li
+                key={`${comment}-${index}`}
+                className="flex items-start gap-3 rounded-xl px-4 py-3 bg-white/80 border border-violet-100"
+              >
+                <span
+                  className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center text-base flex-shrink-0"
+                  aria-hidden="true"
+                >
+                  {getCoachingIcon(comment)}
+                </span>
+                <p
+                  className="text-[13px] text-gray-700 leading-relaxed pt-1"
+                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                >
+                  {formatCoachingLine(comment)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── CameraSection ──────────────────────────────────────────── */
 function CameraSection() {
   const [cameraEnabled, setCameraEnabled] = useState(false);
@@ -287,15 +567,24 @@ function CameraSection() {
   const [paused, setPaused] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-  const [coaching, setCoaching] = useState([]);
+  const [coaching, setCoaching] = useState({
+    comments: [],
+    adaptiveNote: null,
+    visual: null,
+    visualHints: [],
+  });
   const videoRef = useRef(null);
   const wsRef = useRef(null);
   const intervalRef = useRef(null);
   const streamRef = useRef(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
   // const handleEnableCamera = () => setCameraEnabled(true);
   useEffect(() => {
     if (!streamRef.current) return;
-
     streamRef.current.getVideoTracks().forEach((track) => {
       track.enabled = camOn;
     });
@@ -426,20 +715,34 @@ function CameraSection() {
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
 
-      console.log(msg);
-
       switch (msg.type) {
         case "question":
-          console.log("AI Question:", msg.data.question);
           break;
 
         case "coaching_update":
-          setCoaching(msg.data.comments || []);
-          console.log(msg.data.comments);
+          setCoaching((prev) => ({
+            ...prev,
+            comments: msg.data.comments || [],
+            adaptiveNote: msg.data.adaptive_note || null,
+          }));
           break;
 
+        case "visual_update": {
+          // console.log(msg.data);
+
+          const visual = msg.data || {};
+          setCoaching((prev) => ({
+            ...prev,
+            visual,
+            visualHints: buildVisualCoaching(visual),
+          }));
+          break;
+        }
+
         case "transcript_update":
-          console.log(msg.data.text);
+          break;
+
+        default:
           break;
       }
     };
@@ -456,6 +759,7 @@ function CameraSection() {
 
     intervalRef.current = setInterval(() => {
       if (!videoRef.current || !wsRef.current) return;
+      if (pausedRef.current) return;
 
       if (wsRef.current.readyState !== WebSocket.OPEN) return;
 
@@ -476,6 +780,7 @@ function CameraSection() {
 
             const base64 = btoa(binary);
 
+            // console.log("sending frame");
             wsRef.current.send(
               JSON.stringify({
                 type: "video_frame",
@@ -495,6 +800,12 @@ function CameraSection() {
   const handleStop = () => {
     setRecording(false);
     setPaused(false);
+    setCoaching({
+      comments: [],
+      adaptiveNote: null,
+      visual: null,
+      visualHints: [],
+    });
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -578,6 +889,8 @@ function CameraSection() {
               </div>
             )}
 
+            <VideoVisualIndicators visual={coaching.visual} />
+
             {/* Camera off overlay */}
             {cameraEnabled && !camOn && (
               <div className="absolute inset-0 bg-gray-900/90 flex flex-col items-center justify-center gap-2">
@@ -629,6 +942,12 @@ function CameraSection() {
           </div>
         )}
       </div>
+
+      <LiveCoachingPanel
+        coaching={coaching}
+        recording={recording && !paused}
+        visible={recording}
+      />
 
       {/* ── Recording controls card ── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
