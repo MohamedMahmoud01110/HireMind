@@ -511,6 +511,7 @@ function CameraSection({
   const handleStartRecording = () => {
     const sessionId = Math.random().toString(36).slice(2);
     clearFeedback();
+    setRecording(true);
     appendFeedback(
       "Loading AI models (first run takes ~30 seconds). Please wait — do not close this tab.",
       "info",
@@ -525,7 +526,6 @@ function CameraSection({
       wsSend({ type: "start_session", mode: "interview" });
       onWsReady?.(wsSend);
       startCapture();
-      setRecording(true);
       setPaused(false);
     };
 
@@ -611,6 +611,7 @@ function CameraSection({
           "⚠",
         );
       }
+      setRecording(false);
       markRecording(false);
     };
   };
@@ -1126,7 +1127,7 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
   );
 }
 
-/* ─── TipsCard ───────────────────────────────────────────────── */
+/* ─── TipsCard — static prep tips (backend has no separate tips list) ─ */
 function TipsCard() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
@@ -1341,6 +1342,7 @@ export default function AIInterviewPage({
                     onNext={handleNext}
                     onPrev={handlePrev}
                   />
+                  {isRecording && <TipsCard />}
                   <CoachingFeedbackFeed
                     messages={feedbackMessages}
                     isLive={isRecording}
@@ -1348,8 +1350,6 @@ export default function AIInterviewPage({
                 </div>
               </div>
             )}
-
-            {!isRecording && <TipsCard />}
           </div>
         </main>
       </div>

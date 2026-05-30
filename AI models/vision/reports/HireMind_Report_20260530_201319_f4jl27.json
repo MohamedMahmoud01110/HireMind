@@ -1,0 +1,32 @@
+{
+  "hiremind_report": {
+    "version": "1.0",
+    "session_id": "HireMind_Report_20260530_201319_f4jl27",
+    "generated": "2026-05-30T20:13:28.125432",
+    "summary": {
+      "error": "No scores recorded."
+    },
+    "question_by_question": [
+      {
+        "question": "Walk me through your background briefly.",
+        "transcript_sample": "—",
+        "avg_scores": {
+          "confidence": null,
+          "clarity": null,
+          "posture": null,
+          "eye_contact": null,
+          "answer_quality": null,
+          "overall": null
+        },
+        "feedback_summary": "Good performance"
+      }
+    ],
+    "timeline": [
+      {
+        "t": 0.0,
+        "scores": {}
+      }
+    ],
+    "warnings": []
+  }
+}
