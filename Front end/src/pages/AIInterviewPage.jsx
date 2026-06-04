@@ -15,101 +15,10 @@ const INTERVIEW_WS_ORIGIN = (
   import.meta.env.VITE_INTERVIEW_WS_URL || "ws://localhost:3000"
 ).replace(/\/$/, "");
 
-/* ═══════════════════════════════════════════════════════════════
-   DATA — Data Analyst Interview Questions
-═══════════════════════════════════════════════════════════════ */
-const INTERVIEW_QUESTIONS = [
-  {
-    id: 1,
-    category: "Background",
-    question:
-      "Tell me about yourself and your experience as a Data Analyst. What drew you to this field?",
-  },
-  {
-    id: 2,
-    category: "Technical",
-    question:
-      "Walk me through your data analysis process from receiving a raw dataset to delivering insights to stakeholders.",
-  },
-  {
-    id: 3,
-    category: "Technical",
-    question:
-      "Describe a complex SQL query you have written. What was the business problem it solved?",
-  },
-  {
-    id: 4,
-    category: "Technical",
-    question:
-      "How do you handle missing or inconsistent data in a dataset? Walk me through your approach.",
-  },
-  {
-    id: 5,
-    category: "Technical",
-    question:
-      "What is the difference between supervised and unsupervised machine learning? Can you give an example of each?",
-  },
-  {
-    id: 6,
-    category: "Tools & Stack",
-    question:
-      "Which BI tools have you used (e.g., Tableau, Power BI, Looker)? Describe a dashboard you built and its impact.",
-  },
-  {
-    id: 7,
-    category: "Tools & Stack",
-    question:
-      "How do you use Python or R for data analysis? What libraries are part of your typical workflow?",
-  },
-  {
-    id: 8,
-    category: "Behavioral",
-    question:
-      "Tell me about a time when your analysis led to a significant business decision. What was the outcome?",
-  },
-  {
-    id: 9,
-    category: "Behavioral",
-    question:
-      "Describe a situation where you disagreed with a stakeholder about data interpretation. How did you handle it?",
-  },
-  {
-    id: 10,
-    category: "Behavioral",
-    question:
-      "Tell me about a project where you had to work with a very tight deadline. How did you prioritize and deliver?",
-  },
-  {
-    id: 11,
-    category: "Problem Solving",
-    question:
-      "If our sales are declining month over month, how would you investigate this problem using data?",
-  },
-  {
-    id: 12,
-    category: "Problem Solving",
-    question:
-      "How would you measure the success of a newly launched product feature? What metrics would you track?",
-  },
-  {
-    id: 13,
-    category: "Statistics",
-    question:
-      "Explain the concept of A/B testing. How do you determine if results are statistically significant?",
-  },
-  {
-    id: 14,
-    category: "Statistics",
-    question:
-      "What is the difference between correlation and causation? How do you communicate this distinction to non-technical stakeholders?",
-  },
-  {
-    id: 15,
-    category: "Closing",
-    question:
-      "Where do you see the data analytics field heading in the next 3 years, and how are you preparing for those changes?",
-  },
-];
+/* Session length — vision coach picks each question dynamically */
+const INTERVIEW_QUESTION_COUNT = 15;
+
+const QUESTION_CATEGORY = "Interview";
 
 const TIPS = [
   "Maintain natural eye contact with the camera — look at the lens, not the screen",
@@ -121,6 +30,7 @@ const TIPS = [
 ];
 
 const CATEGORY_COLORS = {
+  Interview: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
   Background: { bg: "#f5f3ff", text: "#6d28d9", border: "#ddd6fe" },
   Technical: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
   "Tools & Stack": { bg: "#ecfdf5", text: "#065f46", border: "#a7f3d0" },
@@ -344,6 +254,8 @@ function CameraSection({
   onTranscript,
   onRecordingChange,
   onWsReady,
+  onQuestion,
+  onSessionReset,
 }) {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [recording, setRecording] = useState(false); // true = recording
@@ -511,6 +423,7 @@ function CameraSection({
   const handleStartRecording = () => {
     const sessionId = Math.random().toString(36).slice(2);
     clearFeedback();
+    onSessionReset?.();
     setRecording(true);
     appendFeedback(
       "Loading AI models (first run takes ~30 seconds). Please wait — do not close this tab.",
@@ -549,9 +462,19 @@ function CameraSection({
           }
           break;
 
-        case "question":
-          // Questions come from INTERVIEW_QUESTIONS in QuestionPanel only — ignore AI vision questions.
+        case "question": {
+          const data = msg.data || {};
+          const text = data.question?.trim();
+          if (text) {
+            onQuestion?.({
+              text,
+              index: Number.isFinite(data.question_index)
+                ? data.question_index
+                : 0,
+            });
+          }
           break;
+        }
 
         case "coaching_update": {
           const data = msg.data || {};
@@ -980,11 +903,22 @@ function CameraSection({
 }
 
 /* ─── QuestionPanel ──────────────────────────────────────────── */
-function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
+function QuestionPanel({
+  questions,
+  currentIndex,
+  totalQuestions,
+  isRecording,
+  waitingForQuestion,
+  advancing,
+  onNext,
+  onPrev,
+}) {
   const question = questions[currentIndex];
-  const isLast = currentIndex === questions.length - 1;
+  const isLast = currentIndex >= totalQuestions - 1;
+  const showLoading =
+    isRecording && (waitingForQuestion || advancing || !question);
   const catColors =
-    CATEGORY_COLORS[question.category] ?? CATEGORY_COLORS.Technical;
+    CATEGORY_COLORS[question?.category] ?? CATEGORY_COLORS.Interview;
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -1008,7 +942,7 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            {question.category}
+            {question?.category ?? QUESTION_CATEGORY}
           </span>
         </div>
 
@@ -1021,17 +955,35 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
             boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
           }}
         >
-          <p
-            className="text-[15px] text-gray-800 leading-relaxed font-medium"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
-          >
-            {question.question}
-          </p>
+          {!isRecording ? (
+            <p
+              className="text-[14px] text-gray-500"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              Start recording to receive your first AI interview question.
+            </p>
+          ) : showLoading ? (
+            <p
+              className="text-[14px] text-gray-400 animate-pulse"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              {advancing
+                ? "Loading your next question from the AI coach…"
+                : "Waiting for your first question from the AI coach…"}
+            </p>
+          ) : (
+            <p
+              className="text-[15px] text-gray-800 leading-relaxed font-medium"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              {question.question}
+            </p>
+          )}
         </div>
 
         {/* Question counter pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {questions.map((_, i) => (
+          {Array.from({ length: totalQuestions }).map((_, i) => (
             <div
               key={i}
               className={[
@@ -1078,11 +1030,14 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
         {/* Next / Finish */}
         <button
           onClick={onNext}
+          disabled={!isRecording || showLoading}
           className={[
             "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-150",
-            isLast
-              ? "bg-emerald-600 text-white hover:bg-emerald-500 hover:-translate-y-px hover:shadow-md active:translate-y-0"
-              : "bg-gray-900 text-white hover:bg-gray-700 hover:-translate-y-px hover:shadow-md active:translate-y-0",
+            !isRecording || showLoading
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : isLast
+                ? "bg-emerald-600 text-white hover:bg-emerald-500 hover:-translate-y-px hover:shadow-md active:translate-y-0"
+                : "bg-gray-900 text-white hover:bg-gray-700 hover:-translate-y-px hover:shadow-md active:translate-y-0",
           ].join(" ")}
           style={{ fontFamily: "'Manrope', sans-serif" }}
         >
@@ -1091,6 +1046,8 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
               <SvgIcon d={ICON_PATHS.check} className="w-4 h-4" />
               Finish Interview
             </>
+          ) : advancing ? (
+            "Loading…"
           ) : (
             <>
               Next Question
@@ -1100,7 +1057,7 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
         </button>
       </div>
 
-      {/* Upcoming questions preview */}
+      {/* Upcoming — next question is chosen by vision coach */}
       {!isLast && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
           <p
@@ -1110,16 +1067,16 @@ function QuestionPanel({ questions, currentIndex, onNext, onPrev }) {
             Up Next
           </p>
           <p
-            className="text-[13px] text-gray-500 leading-relaxed line-clamp-2"
+            className="text-[13px] text-gray-500 leading-relaxed"
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            {questions[currentIndex + 1]?.question}
+            Your AI coach will pick the next question based on how you are doing.
           </p>
           <span
             className="inline-block mt-2 text-[11px] font-semibold text-gray-400"
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            Question {currentIndex + 2} of {questions.length}
+            Question {currentIndex + 2} of {totalQuestions}
           </span>
         </div>
       )}
@@ -1183,7 +1140,7 @@ function FinishedBanner({ onRestart, goNext }) {
         className="text-[14px] text-gray-500 max-w-sm mx-auto mb-8 leading-relaxed"
         style={{ fontFamily: "'Manrope', sans-serif" }}
       >
-        You've answered all {INTERVIEW_QUESTIONS.length} questions. Your
+        You've answered all {INTERVIEW_QUESTION_COUNT} questions. Your
         responses are ready for AI analysis.
       </p>
       <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -1222,6 +1179,9 @@ export default function AIInterviewPage({
   onNavigate,
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [questions, setQuestions] = useState([]);
+  const [waitingForQuestion, setWaitingForQuestion] = useState(false);
+  const [advancing, setAdvancing] = useState(false);
   const [finished, setFinished] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const queryClient = useQueryClient();
@@ -1236,22 +1196,41 @@ export default function AIInterviewPage({
     markRecording,
   } = useCoachingFeedback();
 
-  const total = INTERVIEW_QUESTIONS.length;
+  const total = INTERVIEW_QUESTION_COUNT;
   const wsSendRef = useRef(null);
 
-  const notifyQuestionAdvance = (questionIndex) => {
-    wsSendRef.current?.({
-      type: "next_question",
-      client_driven: true,
-      question_index: questionIndex,
-      answer: "",
+  const resetInterviewSession = () => {
+    setQuestions([]);
+    setCurrentIndex(0);
+    setWaitingForQuestion(true);
+    setAdvancing(false);
+  };
+
+  const handleQuestionFromServer = ({ text, index }) => {
+    const entry = {
+      id: index + 1,
+      category: QUESTION_CATEGORY,
+      question: text,
+    };
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[index] = entry;
+      return next;
     });
+    setCurrentIndex(index);
+    setWaitingForQuestion(false);
+    setAdvancing(false);
   };
 
   const handleNext = async () => {
+    if (advancing || waitingForQuestion) return;
+
     if (currentIndex < total - 1) {
-      notifyQuestionAdvance(currentIndex);
-      setCurrentIndex((i) => i + 1);
+      setAdvancing(true);
+      wsSendRef.current?.({
+        type: "next_question",
+        answer: "",
+      });
     } else {
       setFinished(true);
 
@@ -1281,7 +1260,7 @@ export default function AIInterviewPage({
   };
 
   const handleRestart = () => {
-    setCurrentIndex(0);
+    resetInterviewSession();
     setFinished(false);
   };
 
@@ -1330,6 +1309,8 @@ export default function AIInterviewPage({
                   wasRecordingRef={wasRecordingRef}
                   markRecording={markRecording}
                   onRecordingChange={setIsRecording}
+                  onSessionReset={resetInterviewSession}
+                  onQuestion={handleQuestionFromServer}
                   onWsReady={(send) => {
                     wsSendRef.current = send;
                   }}
@@ -1337,8 +1318,12 @@ export default function AIInterviewPage({
 
                 <div className="flex flex-col gap-4 min-h-0">
                   <QuestionPanel
-                    questions={INTERVIEW_QUESTIONS}
+                    questions={questions}
                     currentIndex={currentIndex}
+                    totalQuestions={total}
+                    isRecording={isRecording}
+                    waitingForQuestion={waitingForQuestion}
+                    advancing={advancing}
                     onNext={handleNext}
                     onPrev={handlePrev}
                   />
