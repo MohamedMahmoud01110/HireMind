@@ -15,6 +15,12 @@ const userSchema = new mongoose.Schema({
       score: Number,
     },
   ],
+  plan: {
+    type: String,
+    enum: ["free", "single", "premium"],
+    default: "free",
+  },
+  planExpiresAt: Date,
 });
 
 module.exports = mongoose.model("User", userSchema);

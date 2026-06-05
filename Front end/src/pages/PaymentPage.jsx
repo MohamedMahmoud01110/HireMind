@@ -1,6 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
+import {
+  confirmCheckoutSession,
+  createCheckoutSession,
+} from "../apis/bookingApi";
+import { getProfile } from "../apis/userApi";
 
 /* ═══════════════════════════════════════════════════════════════
    DATA
@@ -123,8 +129,9 @@ function PageHeader() {
 /* ═══════════════════════════════════════════════════════════════
    PLAN CARD
 ═══════════════════════════════════════════════════════════════ */
-function PlanCard({ plan, onSelect }) {
+function PlanCard({ plan, onSelect, loadingPlanId, error }) {
   const [hovered, setHovered] = useState(false);
+  const isLoading = loadingPlanId === plan.id;
 
   return (
     <div
@@ -238,31 +245,44 @@ function PlanCard({ plan, onSelect }) {
         {plan.highlight ? (
           <button
             onClick={() => onSelect(plan.id)}
+            disabled={!!loadingPlanId}
             className={[
               "w-full py-3.5 rounded-xl text-[14px] font-bold text-white",
               "transition-all duration-200",
-              hovered ? "shadow-lg -translate-y-0.5" : "",
+              loadingPlanId ? "opacity-70 cursor-not-allowed" : "",
+              !loadingPlanId && hovered ? "shadow-lg -translate-y-0.5" : "",
             ].join(" ")}
             style={{
               background: "linear-gradient(135deg,#2563eb 0%,#7c3aed 100%)",
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            {plan.cta}
+            {isLoading ? "Redirecting to Stripe…" : plan.cta}
           </button>
         ) : (
           <button
             onClick={() => onSelect(plan.id)}
+            disabled={!!loadingPlanId}
             className={[
               "w-full py-3.5 rounded-xl text-[14px] font-bold",
               "bg-gray-900 text-white",
               "transition-all duration-200",
-              hovered ? "bg-gray-700 shadow-md -translate-y-0.5" : "",
+              loadingPlanId ? "opacity-70 cursor-not-allowed" : "",
+              !loadingPlanId && hovered ? "bg-gray-700 shadow-md -translate-y-0.5" : "",
             ].join(" ")}
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            {plan.cta}
+            {isLoading ? "Redirecting to Stripe…" : plan.cta}
           </button>
+        )}
+
+        {error && (
+          <p
+            className="text-center text-[11px] text-red-500 mt-3"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
+          >
+            {error}
+          </p>
         )}
 
         {/* Reassurance micro-copy */}
@@ -270,7 +290,7 @@ function PlanCard({ plan, onSelect }) {
           className="text-center text-[11px] text-gray-300 mt-3"
           style={{ fontFamily: "'Manrope', sans-serif" }}
         >
-          No credit card required to start
+          Secure checkout powered by Stripe
         </p>
       </div>
     </div>
@@ -488,15 +508,89 @@ function SuccessModal({ planTitle, onClose }) {
 ═══════════════════════════════════════════════════════════════ */
 export default function PaymentPage({
   userData = {},
+  setUserData,
   onLogout,
   goBack,
   onNavigate,
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loadingPlanId, setLoadingPlanId] = useState(null);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
-  const handleSelect = (planId) => {
-    const plan = PLANS.find((p) => p.id === planId);
-    setSelectedPlan(plan);
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+    const canceled = searchParams.get("canceled");
+
+    if (canceled === "true") {
+      setCheckoutError("Payment was cancelled. You can try again when ready.");
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
+    if (success !== "true" || !sessionId) return;
+
+    let cancelled = false;
+
+    const confirmPayment = async () => {
+      setConfirming(true);
+      try {
+        const result = await confirmCheckoutSession(sessionId);
+        const plan =
+          PLANS.find((p) => p.id === result.plan) ||
+          PLANS.find((p) => p.title === result.planName);
+        if (!cancelled) {
+          if (plan) setSelectedPlan(plan);
+          try {
+            const profile = await getProfile();
+            setUserData?.(profile);
+          } catch {
+            /* profile refresh is best-effort */
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCheckoutError(
+            err.response?.data?.message ||
+              "Payment received but confirmation failed. Contact support if access is missing.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setConfirming(false);
+          setSearchParams({}, { replace: true });
+        }
+      }
+    };
+
+    confirmPayment();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, setSearchParams]);
+
+  const handleSelect = async (planId) => {
+    setCheckoutError("");
+    setLoadingPlanId(planId);
+
+    try {
+      const { url } = await createCheckoutSession(planId);
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+      throw new Error("Stripe checkout URL was not returned.");
+    } catch (err) {
+      setCheckoutError(
+        err.response?.data?.message ||
+          err.message ||
+          "Could not start checkout. Please try again.",
+      );
+      setLoadingPlanId(null);
+    }
   };
 
   return (
@@ -536,10 +630,28 @@ export default function PaymentPage({
             {/* Header */}
             <PageHeader />
 
+            {checkoutError && !loadingPlanId && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 text-center">
+                {checkoutError}
+              </div>
+            )}
+
+            {confirming && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-700 text-center">
+                Confirming your payment…
+              </div>
+            )}
+
             {/* Plan cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               {PLANS.map((plan) => (
-                <PlanCard key={plan.id} plan={plan} onSelect={handleSelect} />
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  onSelect={handleSelect}
+                  loadingPlanId={loadingPlanId}
+                  error={loadingPlanId === plan.id ? checkoutError : ""}
+                />
               ))}
             </div>
 

@@ -229,6 +229,7 @@ function AppRoutes() {
         element={protect(
           <PaymentPage
             userData={userData}
+            setUserData={setUserData}
             onLogout={logout}
             goBack={() => goTo("/dashboard")}
             onNavigate={handleSidebarNav}
