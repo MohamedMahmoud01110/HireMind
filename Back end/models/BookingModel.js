@@ -8,7 +8,7 @@ const schema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ["single", "premium"],
+    enum: ["student_first", "student_return", "company_monthly", "single", "premium"],
     required: [true, "Booking must have a plan"],
   },
   price: {

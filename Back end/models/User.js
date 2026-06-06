@@ -17,10 +17,14 @@ const userSchema = new mongoose.Schema({
   ],
   plan: {
     type: String,
-    enum: ["free", "single", "premium"],
+    enum: ["free", "student_first", "student_return", "company_monthly", "single", "premium"],
     default: "free",
   },
   planExpiresAt: Date,
+  subscriptionCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

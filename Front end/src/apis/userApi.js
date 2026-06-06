@@ -9,6 +9,11 @@ export const updateProfile = async (data) => {
   const res = await API.put("/users/me", data);
   return res.data;
 };
+
+export const clearUserScore = async (title) => {
+  const res = await API.put("/users/me", { clearScoreTitle: title });
+  return res.data;
+};
 export const getJobRole = async () => {
   const res = await API.get("/users/me/job-role");
   return res;

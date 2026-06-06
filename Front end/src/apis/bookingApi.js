@@ -1,5 +1,10 @@
 import API from "./axios";
 
+export const getAvailablePlans = async () => {
+  const res = await API.get("/bookings/plans");
+  return res.data;
+};
+
 export const createCheckoutSession = async (planId) => {
   const res = await API.post("/bookings/checkout-session", { planId });
   return res.data;

@@ -1,10 +1,22 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import { analyzeCv } from "../apis/analyzeCvApi";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Helmet } from "react-helmet-async";
-import { useUpdateUserScore } from "../hooks/useUserProfile";
+import FeatureAlreadyTakenModal from "../components/FeatureAlreadyTakenModal";
+import {
+  useClearUserScore,
+  useUpdateUserScore,
+  useUserProfile,
+} from "../hooks/useUserProfile";
+import {
+  FEATURES,
+  getFeatureScore,
+  hasActivePlan,
+  hasAttemptedFeature,
+} from "../utils/featureAccess";
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════════════════════════════ */
@@ -561,11 +573,27 @@ export default function CVAnalysisPage({
   onLogout,
   onNavigate,
 }) {
+  const navigate = useNavigate();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showTakenModal, setShowTakenModal] = useState(false);
+  const [retakeUnlocked, setRetakeUnlocked] = useState(false);
+  const [isRetakeLoading, setIsRetakeLoading] = useState(false);
   const reportRef = useRef();
   const updateScore = useUpdateUserScore();
+  const clearScore = useClearUserScore();
+  const cvScore = getFeatureScore(profile?.scores, FEATURES.CV);
+
+  const alreadyTaken =
+    hasAttemptedFeature(profile?.scores, FEATURES.CV) && !retakeUnlocked;
+
+  useEffect(() => {
+    if (!profileLoading && alreadyTaken) {
+      setShowTakenModal(true);
+    }
+  }, [profileLoading, alreadyTaken]);
 
   const handleFile = (f) => {
     setFile(f);
@@ -590,8 +618,26 @@ export default function CVAnalysisPage({
       improvements: data.recommendations || [],
     };
   };
+  const handleRetake = async () => {
+    if (!hasActivePlan(profile)) {
+      navigate("/payment");
+      return;
+    }
+
+    try {
+      setIsRetakeLoading(true);
+      await clearScore.mutateAsync(FEATURES.CV);
+      setRetakeUnlocked(true);
+      setShowTakenModal(false);
+      setResult(null);
+      setFile(null);
+    } finally {
+      setIsRetakeLoading(false);
+    }
+  };
+
   const handleAnalyze = async () => {
-    if (!file) return;
+    if (!file || alreadyTaken) return;
 
     setLoading(true);
     setResult(null);
@@ -642,6 +688,16 @@ export default function CVAnalysisPage({
       <Helmet>
         <title>HireMind-CVAnalysis</title>
       </Helmet>
+      <FeatureAlreadyTakenModal
+        open={showTakenModal}
+        title="CV Analysis Already Completed"
+        message="You have already analyzed your CV."
+        score={cvScore ?? 0}
+        onClose={() => navigate("/dashboard")}
+        onRetake={handleRetake}
+        isRetakeLoading={isRetakeLoading}
+      />
+
       <div
         className="flex min-h-screen bg-[#f0f4ff]"
         style={{
@@ -668,7 +724,7 @@ export default function CVAnalysisPage({
 
             {/* Analyze button */}
             <AnalyzeButton
-              disabled={!file}
+              disabled={!file || alreadyTaken}
               loading={loading}
               onClick={handleAnalyze}
             />

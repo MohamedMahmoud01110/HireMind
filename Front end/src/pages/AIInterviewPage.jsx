@@ -1,14 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Helmet } from "react-helmet-async";
+import FeatureAlreadyTakenModal from "../components/FeatureAlreadyTakenModal";
 import {
   getScoreByTitle,
   PROFILE_QUERY_KEY,
+  useClearUserScore,
   useUpdateUserScore,
+  useUserProfile,
 } from "../hooks/useUserProfile";
+import {
+  FEATURES,
+  getFeatureScore,
+  hasActivePlan,
+  hasAttemptedFeature,
+} from "../utils/featureAccess";
 import { getProfile } from "../apis/userApi";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCoachingFeedback, pickIconForText } from "../hooks/useCoachingFeedback";
+import {
+  useCoachingFeedback,
+  pickIconForText,
+} from "../hooks/useCoachingFeedback";
 import CoachingFeedbackFeed from "../components/interview/CoachingFeedbackFeed";
 
 const INTERVIEW_WS_ORIGIN = (
@@ -490,8 +503,7 @@ function CameraSection({
         case "visual_update": {
           const visualData = msg.data || {};
           setVisual(visualData);
-          const hints =
-            visualData.hints || buildVisualCoaching(visualData);
+          const hints = visualData.hints || buildVisualCoaching(visualData);
           appendVisualHints(hints);
           break;
         }
@@ -1070,7 +1082,8 @@ function QuestionPanel({
             className="text-[13px] text-gray-500 leading-relaxed"
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            Your AI coach will pick the next question based on how you are doing.
+            Your AI coach will pick the next question based on how you are
+            doing.
           </p>
           <span
             className="inline-block mt-2 text-[11px] font-semibold text-gray-400"
@@ -1140,8 +1153,8 @@ function FinishedBanner({ onRestart, goNext }) {
         className="text-[14px] text-gray-500 max-w-sm mx-auto mb-8 leading-relaxed"
         style={{ fontFamily: "'Manrope', sans-serif" }}
       >
-        You've answered all {INTERVIEW_QUESTION_COUNT} questions. Your
-        responses are ready for AI analysis.
+        You've answered all {INTERVIEW_QUESTION_COUNT} questions. Your responses
+        are ready for AI analysis.
       </p>
       <div className="flex items-center justify-center gap-3 flex-wrap">
         <button
@@ -1184,8 +1197,24 @@ export default function AIInterviewPage({
   const [advancing, setAdvancing] = useState(false);
   const [finished, setFinished] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showTakenModal, setShowTakenModal] = useState(false);
+  const [retakeUnlocked, setRetakeUnlocked] = useState(false);
+  const [isRetakeLoading, setIsRetakeLoading] = useState(false);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
   const updateScore = useUpdateUserScore();
+  const clearScore = useClearUserScore();
+
+  const interviewScore = getFeatureScore(profile?.scores, FEATURES.INTERVIEW);
+  const alreadyTaken =
+    hasAttemptedFeature(profile?.scores, FEATURES.INTERVIEW) && !retakeUnlocked;
+
+  useEffect(() => {
+    if (!profileLoading && alreadyTaken && !finished) {
+      setShowTakenModal(true);
+    }
+  }, [profileLoading, alreadyTaken, finished]);
   const {
     messages: feedbackMessages,
     appendFeedback,
@@ -1259,9 +1288,41 @@ export default function AIInterviewPage({
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
-  const handleRestart = () => {
+  const handleRetake = async () => {
+    if (!hasActivePlan(profile)) {
+      navigate("/payment");
+      return;
+    }
+
+    try {
+      setIsRetakeLoading(true);
+      await clearScore.mutateAsync(FEATURES.INTERVIEW);
+      setRetakeUnlocked(true);
+      setShowTakenModal(false);
+      resetInterviewSession();
+      setFinished(false);
+    } finally {
+      setIsRetakeLoading(false);
+    }
+  };
+
+  const handleRestart = async () => {
+    if (
+      hasAttemptedFeature(profile?.scores, FEATURES.INTERVIEW) &&
+      !hasActivePlan(profile)
+    ) {
+      navigate("/payment");
+      return;
+    }
+
+    if (hasActivePlan(profile)) {
+      await clearScore.mutateAsync(FEATURES.INTERVIEW);
+      setRetakeUnlocked(true);
+    }
+
     resetInterviewSession();
     setFinished(false);
+    setShowTakenModal(false);
   };
 
   return (
@@ -1269,6 +1330,17 @@ export default function AIInterviewPage({
       <Helmet>
         <title>HireMind-AIInterview</title>
       </Helmet>
+
+      <FeatureAlreadyTakenModal
+        open={showTakenModal}
+        title="AI Interview Already Completed"
+        message="You have already completed an AI interview session."
+        score={interviewScore ?? 0}
+        onClose={() => navigate("/report")}
+        onRetake={handleRetake}
+        isRetakeLoading={isRetakeLoading}
+      />
+
       <div
         className="flex min-h-screen bg-[#f0f4ff]"
         style={{
@@ -1295,7 +1367,11 @@ export default function AIInterviewPage({
               <StatusCard currentIndex={currentIndex} total={total} />
             )}
 
-            {finished ? (
+            {showTakenModal && !retakeUnlocked ? (
+              <div className="flex min-h-[50vh] items-center justify-center text-[14px] text-gray-400">
+                Review your previous interview result or retake after payment.
+              </div>
+            ) : finished ? (
               /* Finished state */
               <FinishedBanner onRestart={handleRestart} goNext={goNext} />
             ) : (

@@ -49,7 +49,7 @@ exports.getProfile = async (req, res) => {
 //   res.json(user);
 // };
 exports.updateProfile = async (req, res) => {
-  const { score, ...rest } = req.body;
+  const { score, clearScoreTitle, ...rest } = req.body;
   const user = await User.findById(req.user.id);
 
   if (score) {
@@ -60,6 +60,10 @@ exports.updateProfile = async (req, res) => {
     } else {
       user.scores.push(score);
     }
+  }
+
+  if (clearScoreTitle) {
+    user.scores = user.scores.filter((s) => s.title !== clearScoreTitle);
   }
 
   Object.assign(user, rest);

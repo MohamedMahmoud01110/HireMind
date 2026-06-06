@@ -5,50 +5,9 @@ import { Helmet } from "react-helmet-async";
 import {
   confirmCheckoutSession,
   createCheckoutSession,
+  getAvailablePlans,
 } from "../apis/bookingApi";
 import { getProfile } from "../apis/userApi";
-
-/* ═══════════════════════════════════════════════════════════════
-   DATA
-═══════════════════════════════════════════════════════════════ */
-const PLANS = [
-  {
-    id: "single",
-    title: "Single Assessment",
-    price: "400",
-    currency: "EGP",
-    period: "one-time",
-    badge: null,
-    highlight: false,
-    features: [
-      "Complete skills assessment",
-      "CV analysis with score",
-      "1 AI interview simulation",
-      "Basic performance report",
-      "Valid for 30 days",
-    ],
-    cta: "Get Started",
-  },
-  {
-    id: "premium",
-    title: "Premium Package",
-    price: "800",
-    currency: "EGP",
-    period: "per year",
-    badge: "Best Value",
-    highlight: true,
-    features: [
-      "Unlimited assessments",
-      "Premium CV analysis & optimization",
-      "Unlimited AI interview practice",
-      "Comprehensive career reports",
-      "Personalized learning paths",
-      "Career coaching session (1 hour)",
-      "Valid for 1 year",
-    ],
-    cta: "Get Started",
-  },
-];
 
 const TRUST_BADGES = [
   { icon: "🔒", label: "Secure payment" },
@@ -59,20 +18,20 @@ const TRUST_BADGES = [
 
 const FAQ = [
   {
-    q: "Can I switch plans later?",
-    a: "Yes — you can upgrade to Premium any time. Your remaining Single Assessment days are credited toward the upgrade.",
+    q: "Is the first try really free?",
+    a: "Yes. Every user gets one free CV analysis, pre-assessment, and AI interview. Your scores are saved after the first attempt.",
+  },
+  {
+    q: "What does a paid session include?",
+    a: "A paid session unlocks retakes for all features for 30 days. Students pay 450 EGP for their first session, then 250–350 EGP when returning after expiry.",
   },
   {
     q: "What payment methods are accepted?",
-    a: "We accept all major credit / debit cards, Fawry, and Vodafone Cash.",
+    a: "We accept all major credit and debit cards through Stripe secure checkout.",
   },
   {
-    q: "Is there a refund policy?",
-    a: "Yes. If you are not satisfied within 7 days of purchase, contact support for a full refund — no questions asked.",
-  },
-  {
-    q: "Does the Premium plan auto-renew?",
-    a: "No. You'll receive a reminder 14 days before expiry and can choose to renew manually.",
+    q: "How does company billing work?",
+    a: "Company accounts are billed 7,000 EGP per month with unlimited access for the billing period.",
   },
 ];
 
@@ -120,7 +79,8 @@ function PageHeader() {
         className="text-[15px] text-gray-400 max-w-md mx-auto leading-relaxed"
         style={{ fontFamily: "'Manrope', sans-serif" }}
       >
-        Select the perfect plan for your needs. Upgrade or cancel any time.
+        Your first CV analysis, pre-assessment, and AI interview are free.
+        Retakes require a paid session.
       </p>
     </div>
   );
@@ -514,10 +474,29 @@ export default function PaymentPage({
   onNavigate,
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
   const [checkoutError, setCheckoutError] = useState("");
   const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const res = await getAvailablePlans();
+        setPlans(res.data || []);
+      } catch (err) {
+        setCheckoutError(
+          err.response?.data?.message || "Could not load payment plans.",
+        );
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    loadPlans();
+  }, []);
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -539,8 +518,11 @@ export default function PaymentPage({
       try {
         const result = await confirmCheckoutSession(sessionId);
         const plan =
-          PLANS.find((p) => p.id === result.plan) ||
-          PLANS.find((p) => p.title === result.planName);
+          plans.find((p) => p.id === result.plan) ||
+          plans.find((p) => p.title === result.planName) ||
+          (result.planName
+            ? { title: result.planName, id: result.plan }
+            : null);
         if (!cancelled) {
           if (plan) setSelectedPlan(plan);
           try {
@@ -570,7 +552,7 @@ export default function PaymentPage({
     return () => {
       cancelled = true;
     };
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, plans]);
 
   const handleSelect = async (planId) => {
     setCheckoutError("");
@@ -642,18 +624,31 @@ export default function PaymentPage({
               </div>
             )}
 
-            {/* Plan cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-              {PLANS.map((plan) => (
-                <PlanCard
-                  key={plan.id}
-                  plan={plan}
-                  onSelect={handleSelect}
-                  loadingPlanId={loadingPlanId}
-                  error={loadingPlanId === plan.id ? checkoutError : ""}
-                />
-              ))}
-            </div>
+            {plansLoading ? (
+              <div className="text-center text-[14px] text-gray-400 py-12">
+                Loading plans for your account…
+              </div>
+            ) : plans.length === 0 ? (
+              <div className="text-center text-[14px] text-gray-500 py-12">
+                No plans available for your account right now.
+              </div>
+            ) : (
+              <div
+                className={`grid grid-cols-1 gap-6 items-start ${
+                  plans.length > 1 ? "md:grid-cols-2" : "max-w-md mx-auto w-full"
+                }`}
+              >
+                {plans.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    onSelect={handleSelect}
+                    loadingPlanId={loadingPlanId}
+                    error={loadingPlanId === plan.id ? checkoutError : ""}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Trust strip */}
             <TrustStrip />

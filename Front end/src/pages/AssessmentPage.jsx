@@ -5,8 +5,9 @@ import QuestionCard from "../components/assessment/QuestionCard";
 import NavigationButtons from "../components/assessment/NavigationButtons";
 import { getJobRole } from "../apis/userApi";
 import {
-  getScoreByTitle,
+  useClearUserScore,
   useUpdateUserScore,
+  useUserProfile,
 } from "../hooks/useUserProfile";
 import {
   ASSESSMENT_QUESTIONS,
@@ -21,8 +22,14 @@ import {
   submitPreAssessmentAnswers,
 } from "../apis/preAssessmentQuestionsApi";
 import Loading from "../components/Loading";
-import AssessmentAlreadyTakenModal from "../components/AssessmentAlreadyTakenModal";
+import FeatureAlreadyTakenModal from "../components/FeatureAlreadyTakenModal";
 import { useNavigate } from "react-router-dom";
+import {
+  FEATURES,
+  getFeatureScore,
+  hasActivePlan,
+  hasAttemptedFeature,
+} from "../utils/featureAccess";
 import NoJobRoleState from "../components/NoJobRoleState";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -228,7 +235,9 @@ export default function AssessmentPage({
   const [transitioning, setTransitioning] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
+  const { profile } = useUserProfile();
   const updateScore = useUpdateUserScore();
+  const clearScore = useClearUserScore();
   const [timeUp, setTimeUp] = useState(false);
   const timerRef = useRef(null);
   const questions = preAssessmentQuestions || [];
@@ -313,6 +322,19 @@ export default function AssessmentPage({
 
     fetchData();
   }, [jobRole]);
+
+  useEffect(() => {
+    if (result || isLoading || !jobRole || !profile) return;
+
+    if (hasAttemptedFeature(profile.scores, FEATURES.PRE_ASSESSMENT)) {
+      const percentage = getFeatureScore(profile.scores, FEATURES.PRE_ASSESSMENT) ?? 0;
+      setResult({
+        percentage,
+        score: Math.round((percentage / 100) * 20),
+        total: 20,
+      });
+    }
+  }, [profile, jobRole, result, isLoading]);
 
   /* ── Persist answers to localStorage ── */
   useEffect(() => {
@@ -415,9 +437,15 @@ export default function AssessmentPage({
   };
 
   const handleRetake = async () => {
+    if (!hasActivePlan(profile)) {
+      navigate("/payment");
+      return;
+    }
+
     try {
       setIsRetake(true);
 
+      await clearScore.mutateAsync(FEATURES.PRE_ASSESSMENT);
       await deletePreAssessmentResult(jobRole);
       await queryClient.invalidateQueries({
         queryKey: ["preAssessmentResult"],
@@ -504,14 +532,23 @@ export default function AssessmentPage({
             ) : hasResult ? (
               /* Already Taken State */
               <div className="flex min-h-[60vh] items-center justify-center">
-                <AssessmentAlreadyTakenModal
+                <FeatureAlreadyTakenModal
                   open={hasResult}
-                  result={result}
-                  onClose={() => {
-                    (setResult(null), navigate("/interview"));
-                  }}
+                  title="Pre-Assessment Already Completed"
+                  message="You have already taken this pre-assessment."
+                  score={
+                    result?.percentage ??
+                    getFeatureScore(profile?.scores, FEATURES.PRE_ASSESSMENT) ??
+                    0
+                  }
+                  extraDetails={
+                    result
+                      ? `You answered ${result.total ?? 20} questions and got ${result.score ?? 0} correct.`
+                      : null
+                  }
+                  onClose={() => navigate("/dashboard")}
                   onRetake={handleRetake}
-                  isRetake={isRetake}
+                  isRetakeLoading={isRetake}
                 />
               </div>
             ) : (

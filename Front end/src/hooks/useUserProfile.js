@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProfile, updateProfile } from "../apis/userApi";
+import { clearUserScore, getProfile, updateProfile } from "../apis/userApi";
 
 export const PROFILE_QUERY_KEY = ["profile"];
 
@@ -73,13 +73,14 @@ export function useUserProfile(options = {}) {
 export function useUserScores() {
   const query = useUserProfile();
 
+  // console.log("query", query);
+  // console.log("data", query.data);
+  // console.log("error", query.error);
+  // console.log("isLoading", query.isLoading);
   const userScores = query.data?.scores || [];
   const scoresVersion = `${query.dataUpdatedAt}:${JSON.stringify(userScores)}`;
 
-  const scores = useMemo(
-    () => buildDisplayScores(userScores),
-    [scoresVersion],
-  );
+  const scores = useMemo(() => buildDisplayScores(userScores), [scoresVersion]);
 
   return {
     ...query,
@@ -132,6 +133,20 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: updateProfile,
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, updatedUser);
+    },
+    onSettled: async () => {
+      await refetchUserProfile(queryClient);
+    },
+  });
+}
+
+export function useClearUserScore() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: clearUserScore,
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(PROFILE_QUERY_KEY, updatedUser);
     },
