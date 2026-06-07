@@ -581,6 +581,8 @@ export default function CVAnalysisPage({
   const [showTakenModal, setShowTakenModal] = useState(false);
   const [retakeUnlocked, setRetakeUnlocked] = useState(false);
   const [isRetakeLoading, setIsRetakeLoading] = useState(false);
+  const [wasAlreadyTakenOnLoad, setWasAlreadyTakenOnLoad] = useState(false);
+
   const reportRef = useRef();
   const updateScore = useUpdateUserScore();
   const clearScore = useClearUserScore();
@@ -588,12 +590,25 @@ export default function CVAnalysisPage({
 
   const alreadyTaken =
     hasAttemptedFeature(profile?.scores, FEATURES.CV) && !retakeUnlocked;
+  useEffect(() => {
+    if (!profileLoading) {
+      setWasAlreadyTakenOnLoad(
+        hasAttemptedFeature(profile?.scores, FEATURES.CV),
+      );
+    }
+  }, [profileLoading]);
 
   useEffect(() => {
-    if (!profileLoading && alreadyTaken) {
+    if (!profileLoading && wasAlreadyTakenOnLoad && alreadyTaken) {
       setShowTakenModal(true);
     }
-  }, [profileLoading, alreadyTaken]);
+  }, [profileLoading, alreadyTaken, wasAlreadyTakenOnLoad]);
+
+  // useEffect(() => {
+  //   if (!profileLoading && alreadyTaken) {
+  //     setShowTakenModal(true);
+  //   }
+  // }, [profileLoading, alreadyTaken]);
 
   const handleFile = (f) => {
     setFile(f);

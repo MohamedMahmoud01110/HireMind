@@ -6,6 +6,7 @@ const INITIAL_FORM = {
   password: "",
   role: "",
   jobRole: "",
+  companyAddress: "",
 };
 
 export function useSignupForm() {
@@ -57,6 +58,10 @@ export function useSignupForm() {
     }
     if (!form.role) {
       e.role = "Please select your role";
+    }
+
+    if (form.role === "company" && !form.companyAddress.trim()) {
+      e.companyAddress = "Company address is required";
     }
 
     // // ── Job Role ──

@@ -35,27 +35,29 @@ export default function SignupPage({ setUserData, goNext }) {
     e.preventDefault();
     const isValid = handleSubmit();
     if (!isValid) return;
+    const isCompany = form.role === "company";
     const user = {
       name: form.name,
       email: form.email,
       password: form.password,
       role: form.role,
-      jobRole: form.jobRole || "",
-      skills,
-      cv: cvFile?.name || null,
+      jobRole: isCompany ? "" : form.jobRole || "",
+      skills: isCompany ? [] : skills,
+      cv: isCompany ? null : cvFile?.name || null,
+      companyAddress: isCompany ? form.companyAddress : "",
     };
-    // localStorage.setItem('token', res.data.token)
     try {
       setSubmitted(true);
-      // console.log(user);
       const res = await registerUser(user);
-      // console.log(res);
-      // console.log(res.data.user);
-      setUserData?.(res.data.user);
-      localStorage.setItem("userData", JSON.stringify(res.data.user));
+      const savedUser = {
+        ...res.data.user,
+        companyAddress: isCompany ? form.companyAddress : "",
+      };
+      setUserData?.(savedUser);
+      localStorage.setItem("userData", JSON.stringify(savedUser));
       localStorage.setItem("token", res.data.token);
 
-      goNext();
+      goNext(form.role);
     } catch (err) {
       console.log(err.response?.data || err.message);
     } finally {
@@ -174,22 +176,40 @@ export default function SignupPage({ setUserData, goNext }) {
                   error={errors.role}
                 />
               </div>
-              <div>
-                <FieldLabel htmlFor="jobRole">Job Role</FieldLabel>
-                <JobSelect
-                  value={form.jobRole}
-                  onChange={setField("jobRole")}
-                  error={errors.jobRole}
-                />
-              </div>
-              <div>
-                <FieldLabel>Skills</FieldLabel>
-                <SkillTags selected={skills} onToggle={toggleSkill} />
-              </div>
-              <div>
-                <FieldLabel optional>Upload CV</FieldLabel>
-                <UploadBox file={cvFile} onFile={setCvFile} />
-              </div>
+              {form.role === "company" ? (
+                <div>
+                  <FieldLabel htmlFor="companyAddress">
+                    Company Address
+                  </FieldLabel>
+                  <TextInput
+                    id="companyAddress"
+                    value={form.companyAddress}
+                    onChange={setField("companyAddress")}
+                    icon="📍"
+                    placeholder="e.g. 123 Business St, Cairo, Egypt"
+                    error={errors.companyAddress}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <FieldLabel htmlFor="jobRole">Job Role</FieldLabel>
+                    <JobSelect
+                      value={form.jobRole}
+                      onChange={setField("jobRole")}
+                      error={errors.jobRole}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel>Skills</FieldLabel>
+                    <SkillTags selected={skills} onToggle={toggleSkill} />
+                  </div>
+                  <div>
+                    <FieldLabel optional>Upload CV</FieldLabel>
+                    <UploadBox file={cvFile} onFile={setCvFile} />
+                  </div>
+                </>
+              )}
               {errors.general && (
                 <p className="text-red-500 text-sm">{errors.general}</p>
               )}

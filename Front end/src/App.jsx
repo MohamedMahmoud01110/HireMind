@@ -21,6 +21,9 @@ import MyReportPage from "./pages/MyReportPage";
 import PaymentPage from "./pages/PaymentPage";
 import SettingsPage from "./pages/SettingsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import CompanyDashboardPage from "./pages/company/CompanyDashboardPage";
+import AddJobPage from "./pages/company/AddJobPage";
+import CompanyJobsPage from "./pages/company/CompanyJobsPage";
 
 const NAV_MAP = {
   dashboard: "/dashboard",
@@ -30,6 +33,13 @@ const NAV_MAP = {
   report: "/report",
   payment: "/payment",
   settings: "/settings",
+};
+
+const COMPANY_NAV_MAP = {
+  "company-dashboard": "/company/dashboard",
+  "add-job": "/company/add-job",
+  "my-jobs": "/company/jobs",
+  settings: "/company/settings",
 };
 
 function AppRoutes() {
@@ -46,6 +56,23 @@ function AppRoutes() {
   const handleSidebarNav = (key) => {
     const path = NAV_MAP[key];
     if (path) navigate(path);
+  };
+
+  const handleCompanyNav = (key) => {
+    const path = COMPANY_NAV_MAP[key];
+    if (path) navigate(path);
+  };
+
+  const companyProtect = (component) => {
+    if (!userData?.email) return <Navigate to="/login" />;
+    if (userData?.role !== "company") return <Navigate to="/dashboard" />;
+    return component;
+  };
+
+  const studentProtect = (component) => {
+    if (!userData?.email) return <Navigate to="/login" />;
+    if (userData?.role === "company") return <Navigate to="/company/dashboard" />;
+    return component;
   };
 
   useEffect(() => {
@@ -81,6 +108,8 @@ function AppRoutes() {
           userData?.email ? (
             userData.role === "admin" ? (
               <Navigate to="/admin" />
+            ) : userData.role === "company" ? (
+              <Navigate to="/company/dashboard" />
             ) : (
               <Navigate to="/dashboard" />
             )
@@ -97,7 +126,11 @@ function AppRoutes() {
           <SignupPage
             userData={userData}
             setUserData={setUserData}
-            goNext={() => goTo("/experience")} // ✅ FIX
+            goNext={(role) =>
+              role === "company"
+                ? goTo("/company/dashboard")
+                : goTo("/experience")
+            }
           />
         }
       />
@@ -108,7 +141,7 @@ function AppRoutes() {
       {/* Steps */}
       <Route
         path="/experience"
-        element={protect(
+        element={studentProtect(
           <ExperienceStep
             userData={userData}
             setUserData={setUserData}
@@ -120,7 +153,7 @@ function AppRoutes() {
 
       <Route
         path="/tools"
-        element={protect(
+        element={studentProtect(
           <ToolsStep
             userData={userData}
             setUserData={setUserData}
@@ -132,7 +165,7 @@ function AppRoutes() {
 
       <Route
         path="/skills"
-        element={protect(
+        element={studentProtect(
           <SkillsStep
             userData={userData}
             setUserData={setUserData}
@@ -162,10 +195,56 @@ function AppRoutes() {
         )}
       />
 
+      {/* Company Pages */}
+      <Route
+        path="/company/dashboard"
+        element={companyProtect(
+          <CompanyDashboardPage
+            userData={userData}
+            onLogout={logout}
+            onNavigate={handleCompanyNav}
+          />,
+        )}
+      />
+
+      <Route
+        path="/company/add-job"
+        element={companyProtect(
+          <AddJobPage
+            userData={userData}
+            onLogout={logout}
+            onNavigate={handleCompanyNav}
+          />,
+        )}
+      />
+
+      <Route
+        path="/company/jobs"
+        element={companyProtect(
+          <CompanyJobsPage
+            userData={userData}
+            onLogout={logout}
+            onNavigate={handleCompanyNav}
+          />,
+        )}
+      />
+
+      <Route
+        path="/company/settings"
+        element={companyProtect(
+          <SettingsPage
+            userData={userData}
+            onLogout={logout}
+            onNavigate={handleCompanyNav}
+            isCompany
+          />,
+        )}
+      />
+
       {/* Main Pages */}
       <Route
         path="/dashboard"
-        element={protect(
+        element={studentProtect(
           <DashboardPage
             userData={userData}
             onLogout={logout}
@@ -176,7 +255,7 @@ function AppRoutes() {
 
       <Route
         path="/cv-analysis"
-        element={protect(
+        element={studentProtect(
           <CVAnalysisPage
             userData={userData}
             onLogout={logout}
@@ -187,7 +266,7 @@ function AppRoutes() {
 
       <Route
         path="/assessment"
-        element={protect(
+        element={studentProtect(
           <AssessmentPage
             userData={userData}
             goNext={() => goTo("/interview")}
@@ -200,7 +279,7 @@ function AppRoutes() {
 
       <Route
         path="/interview"
-        element={protect(
+        element={studentProtect(
           <AIInterviewPage
             userData={userData}
             goNext={() => goTo("/report")}
@@ -213,7 +292,7 @@ function AppRoutes() {
 
       <Route
         path="/report"
-        element={protect(
+        element={studentProtect(
           <MyReportPage
             userData={userData}
             goBack={() => goTo("/dashboard")}
@@ -226,7 +305,7 @@ function AppRoutes() {
 
       <Route
         path="/payment"
-        element={protect(
+        element={studentProtect(
           <PaymentPage
             userData={userData}
             setUserData={setUserData}
@@ -239,7 +318,7 @@ function AppRoutes() {
 
       <Route
         path="/settings"
-        element={protect(
+        element={studentProtect(
           <SettingsPage
             userData={userData}
             onLogout={logout}

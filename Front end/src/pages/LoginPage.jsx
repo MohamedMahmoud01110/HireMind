@@ -60,6 +60,24 @@ export default function LoginPage({ setUserData }) {
 
       if (user.role === "admin") {
         navigate("/admin");
+      } else if (user.role === "company") {
+        const saved = localStorage.getItem("userData");
+        let merged = user;
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (
+              parsed.email === user.email &&
+              parsed.companyAddress
+            ) {
+              merged = { ...user, companyAddress: parsed.companyAddress };
+            }
+          } catch {
+            /* keep merged as user */
+          }
+        }
+        setUserData?.(merged);
+        navigate("/company/dashboard");
       } else if (!user.role) {
         navigate("/experience");
       } else {

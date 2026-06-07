@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
+import CompanySidebar from "../components/dashboard/CompanySidebar";
 import { changePassword, deleteUserById, updateProfile } from "../apis/userApi";
 import { Helmet } from "react-helmet-async";
 import DeleteAccountModal from "../components/deleteAccountModal";
@@ -526,7 +527,12 @@ function ChangePasswordCard() {
      onLogout   {Function}
      onNavigate {Function}
 ═══════════════════════════════════════════════════════════════ */
-export default function SettingsPage({ userData = {}, onLogout, onNavigate }) {
+export default function SettingsPage({
+  userData = {},
+  onLogout,
+  onNavigate,
+  isCompany = false,
+}) {
   const [activeNav, setActiveNav] = useState("settings");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -564,11 +570,19 @@ export default function SettingsPage({ userData = {}, onLogout, onNavigate }) {
           backgroundSize: "32px 32px",
         }}
       >
-        <Sidebar
-          activeKey={activeNav}
-          onNavigate={handleNav}
-          onLogout={onLogout}
-        />
+        {isCompany ? (
+          <CompanySidebar
+            activeKey={activeNav}
+            onNavigate={handleNav}
+            onLogout={onLogout}
+          />
+        ) : (
+          <Sidebar
+            activeKey={activeNav}
+            onNavigate={handleNav}
+            onLogout={onLogout}
+          />
+        )}
 
         <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0">
           <div className="max-w-2xl mx-auto px-5 lg:px-8 py-8 flex flex-col gap-6">
