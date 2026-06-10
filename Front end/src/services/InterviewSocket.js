@@ -15,7 +15,7 @@ class InterviewSocket {
 
     const url = `ws://localhost:3000/ws/${this.sessionId}`;
     this.socket = new WebSocket(url);
-
+    // connect to Ai
     this.socket.onopen = () => {
       console.log("AI Connected");
 
